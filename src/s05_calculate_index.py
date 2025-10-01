@@ -7,6 +7,7 @@ from utils import retry, find_dict_by_field, get_dates_ranges
 from utils import query_json
 import pathlib
 import pandas as pd
+import time
 
 pd.set_option('display.width', 1000)
 # 显示所有列
@@ -22,7 +23,21 @@ def calculate_index(data_path: pathlib.Path, config: dict):
     if not index_dir.exists():
         index_dir.mkdir()
 
-    for index in filtered_index:
+    total_count = len(filtered_index)
+    start_time = time.time()
+    
+    for i, index in enumerate(filtered_index):
+        # 计算进度和时间信息
+        elapsed_time = time.time() - start_time
+        progress_percent = (i / total_count) * 100
+        estimated_total_time = (elapsed_time / (i + 1)) * total_count if i > 0 else 0
+        remaining_time = estimated_total_time - elapsed_time
+        
+        # 打印进度日志
+        logging.info(f"计算进度: {i}/{total_count} ({progress_percent:.2f}%) - "
+                     f"已用时: {elapsed_time:.2f}s - "
+                     f"预计剩余: {remaining_time:.2f}s")
+
         with open(index_dir.joinpath(f"{index['stockCode']}.pickle"), "rb") as f:
             index_info = pickle.load(f)
         logging.info(f"正在计算{index['stockCode']}的指数信息")
@@ -63,4 +78,6 @@ def calculate_index(data_path: pathlib.Path, config: dict):
         # print(df[-30:])
         # return
 
-    logging.info("所有指数计算完成")
+    # 计算总耗时
+    total_elapsed = time.time() - start_time
+    logging.info(f"所有指数计算完成，总耗时: {total_elapsed:.2f}s")
