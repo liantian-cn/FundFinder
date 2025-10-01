@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html style="height: 100%;">
+
+<head>
+    <meta charset="utf-8" />
+    <title>基金展示</title>
+    <script src="echarts.min.js"></script>
+
+    <link rel="stylesheet" href="bootstrap.min.css">
+    <link rel="stylesheet" href="dataTables.bootstrap4.min.css">
+    <script src="jquery.min.js"></script>
+    <script src="bootstrap.bundle.min.js"></script>
+    <script src="jquery.dataTables.min.js"></script>
+
+    <script src="dataTables.bootstrap4.min.js"></script>
+    <style>
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* 添加紧凑的navbar样式 */
+        .navbar {
+            padding: 0.25rem 1rem;
+            min-height: 40px;
+        }
+
+        .navbar-brand {
+            font-size: 1.1rem;
+            margin-right: 1rem;
+        }
+
+        .navbar-text {
+            font-size: 0.9rem;
+        }
+
+        .container-fluid.h-100 {
+            height: 100vh !important;
+            display: flex;
+            flex-direction: column;
+            padding: 0;
+        }
+
+        #accordionExample {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .card {
+            flex: 0 0 auto;
+            /* 默认只占用需要的高度 */
+        }
+
+        .card.expanded {
+            flex: 1;
+            /* 展开时占据剩余空间 */
+        }
+
+        .card-header {
+            flex: 0 0 auto;
+        }
+
+        .collapse:not(.show) {
+            display: none;
+        }
+
+        .card-body {
+            flex: 1;
+            overflow-y: auto;
+            height: calc(100vh - 100px);
+            /* 大致减去header高度 */
+        }
+
+        /* 表格样式 */
+        .table-wrapper {
+            max-height: 100%;
+            overflow: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+            position: sticky;
+            top: 0;
+        }
+    </style>
+</head>
+
+<body style="height: 100%;">
+    <nav class="navbar navbar-expand navbar-light bg-light">
+
+
+
+        <span class="navbar-brand mb-0 h1" id="pageTitle">标题</span>
+
+        <span class="navbar-text" id="updateTime">
+
+            更新时间
+
+        </span>
+
+
+
+    </nav>
+
+    <div class="container-fluid h-100">
+        <div class="accordion" id="accordionExample">
+            <div class="card expanded">
+                <div class="card-header" id="headingOne">
+                    <h2 class="mb-0">
+                        <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse"
+                            data-target="#collapseKLine" aria-expanded="true" aria-controls="collapseKLine">
+                            K线图
+                        </button>
+                    </h2>
+                </div>
+
+                <div id="collapseKLine" class="collapse show" aria-labelledby="headingOne"
+                    data-parent="#accordionExample">
+                    <div class="card-body" id="kline">
+                        Some placeholder content for the first accordion panel. This panel is shown by default, thanks
+                        to the
+                        <code>.show</code> class.
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header" id="headingTwo">
+                    <h2 class="mb-0">
+                        <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse"
+                            data-target="#collapseShares" aria-expanded="false" aria-controls="collapseShares">
+                            指数成分股
+                        </button>
+                    </h2>
+                </div>
+                <div id="collapseShares" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionExample">
+                    <div class="card-body">
+                        <div class="table-wrapper">
+                            <table id="constituentTable" class="table table-striped table-bordered" style="width:100%">
+                                <thead>
+                                    <tr>
+                                        <th>股票代码</th>
+                                        <th>名称</th>
+                                        <th>权重</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header" id="headingThree">
+                    <h2 class="mb-0">
+                        <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse"
+                            data-target="#collapseFunds" aria-expanded="false" aria-controls="collapseFunds">
+                            指数关联基金
+                        </button>
+                    </h2>
+                </div>
+                <div id="collapseFunds" class="collapse" aria-labelledby="headingThree" data-parent="#accordionExample">
+                    <div class="card-body">
+                        <div class="table-wrapper">
+                            <table id="trackingFundTable" class="table table-striped table-bordered" style="width:100%">
+                                <thead>
+                                    <tr>
+                                        <th>基金代码</th>
+                                        <th>基金全名</th>
+                                        <th>基金简称</th>
+                                        <th>基金类型</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header" id="headingFour">
+                    <h2 class="mb-0">
+                        <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse"
+                            data-target="#collapseLogs" aria-expanded="false" aria-controls="collapseLogs">
+                            交易日志
+                        </button>
+                    </h2>
+                </div>
+                <div id="collapseLogs" class="collapse" aria-labelledby="headingFour" data-parent="#accordionExample">
+                    <div class="card-body">
+                        <div class="table-wrapper">
+                            <p>这里是交易日志内容占位符</p>
+                            <ul>
+                                <li>2025-09-30: 操作记录1</li>
+                                <li>2025-09-29: 操作记录2</li>
+                                <li>2025-09-28: 操作记录3</li>
+                                <li>2025-09-27: 操作记录4</li>
+                                <li>2025-09-26: 操作记录5</li>
+                            </ul>
+                            <p>更多日志内容...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 监听折叠面板的显示/隐藏事件
+        $('.collapse').on('shown.bs.collapse', function () {
+            // 移除所有卡片的expanded类
+            $('.card').removeClass('expanded');
+
+            // 给包含当前展开面板的卡片添加expanded类
+            $(this).closest('.card').addClass('expanded');
+        });
+
+        $('.collapse').on('hidden.bs.collapse', function () {
+            // 当面板关闭时，移除expanded类
+            $(this).closest('.card').removeClass('expanded');
+        });
+    </script>
+
+
+
+    <script>
+        const upColor = '#00da3c';
+        const downColor = '#ec0000';
+
+        // 初始化图表
+        var myChart = echarts.init(document.getElementById('kline'));
+
+        // 新增处理数据帧的函数
+        function processDataframe(data) {
+            // 处理原始数据
+            const categoryData = [];
+            const values = [];
+            const volumes = [];
+
+            // 新增用于百分位数据的数组
+            const pePercentile = [];
+            const pbPercentile = [];
+            const dyrPercentile = [];
+            // 新增布林值数据数组
+            const bbPosition = [];
+            // 新增估值百分位数组
+            const valuationPercentile = [];
+
+            data.forEach((item, index) => {
+                categoryData.push(item.date);
+                values.push([
+                    item.open,
+                    item.close,
+                    item.low,
+                    item.high
+                ]);
+                volumes.push([
+                    index,
+                    item.volume,
+                    item.open > item.close ? 1 : -1 // 红涨绿跌逻辑
+                ]);
+
+                // 添加百分位数据
+                pePercentile.push(item.pe_percentile * 100);  // 转换为百分比
+                pbPercentile.push(item.pb_percentile * 100);  // 转换为百分比
+                dyrPercentile.push(item.dyr_percentile * 100); // 转换为百分比
+                // 添加布林值数据，将[-2,2]区间转换为[0,100]区间
+                bbPosition.push(item.bb_position * 100);
+                // 添加估值百分位数据
+                valuationPercentile.push(item.valuation_percentile * 100);
+            });
+
+            // 使用预计算的移动平均线数据
+            const ma5 = data.map(item => item.ma5);
+            const ma10 = data.map(item => item.ma10);
+            const ma20 = data.map(item => item.ma20);
+            const ma30 = data.map(item => item.ma30);
+            const ma60 = data.map(item => item.ma60);
+            const ma120 = data.map(item => item.ma120);
+            const ma250 = data.map(item => item.ma250);
+
+            // 配置项
+            const option = {
+                animation: false,
+                title: [
+                    {
+                        text: 'K线图',
+                        left: 'center',
+                        top: '1%'
+                    },
+                    {
+                        text: '成交量',
+                        left: 'center',
+                        top: '50%'
+                    },
+                    {
+                        text: '估值百分位',
+                        left: 'center',
+                        top: '65%'
+                    }
+                ],
+                legend: {
+                    type: 'scroll',
+                    orient: 'horizontal',
+                    left: 'center',
+                    top: '30',
+                    data: ['MA5', 'MA10', 'MA20', 'MA30', 'MA60', 'MA120', 'MA250'],
+                    selected: {
+                        'MA5': true,
+                        'MA10': false,
+                        'MA20': true,
+                        'MA30': false,
+                        'MA60': false,
+                        'MA120': true,
+                        'MA250': true
+                    },
+                    textStyle: {
+                        fontSize: 12
+                    }
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'cross'
+                    },
+                    borderWidth: 1,
+                    borderColor: '#ccc',
+                    padding: 10,
+                    textStyle: {
+                        color: '#000'
+                    },
+                    position: function (pos, params, el, elRect, size) {
+                        const obj = {
+                            top: 10
+                        };
+                        obj[['left', 'right'][+(pos[0] < size.viewSize[0] / 2)]] = 30;
+                        return obj;
+                    },
+                    formatter: function (params) {
+                        // 过滤掉高估线和低估线，不在tooltip中显示
+                        const filteredParams = params.filter(param =>
+                            param.seriesName !== '高估线' && param.seriesName !== '低估线'
+                        );
+
+                        if (filteredParams.length === 0) {
+                            return '';
+                        }
+
+                        // 使用原始的formatter逻辑显示剩下的数据
+                        let result = '';
+                        if (filteredParams[0].axisValue) {
+                            result += filteredParams[0].axisValue + '<br/>';
+                        }
+
+                        // 定义各系列的颜色，确保与lineStyle中的color一致
+                        const seriesColors = {
+                            '市盈率百分位': '#999999',
+                            '市净率百分位': '#cccc00',
+                            '股息率收益率': '#8888ff',
+                            '布林值': 'rgba(70, 70, 70, 0.5)',
+                            '估值百分位': '#ff0000'
+                        };
+
+                        filteredParams.forEach(param => {
+                            // 获取series定义的颜色，如果没有特别定义则使用param.color
+                            let seriesColor = seriesColors[param.seriesName] || param.color;
+                            // 创建一个带颜色的标记，确保与series中的颜色一致
+                            let marker = '<span style="display:inline-block;margin-right:5px;border-radius:10px;width:10px;height:10px;background-color:' +
+                                seriesColor + ';"></span>';
+
+                            // 格式化数值，最多保留两位小数
+                            let formattedValue = param.value;
+                            if (typeof param.value === 'number') {
+                                formattedValue = param.value.toFixed(2);
+                            }
+
+                            if (param.seriesName === 'K线') {
+                                // K线有4个值需要特殊处理
+                                if (Array.isArray(param.value)) {
+                                    formattedValue = param.value.map(val => typeof val === 'number' ? val.toFixed(2) : val).join(', ');
+                                }
+                                result += marker + 'K线: ' + formattedValue + '<br/>';
+                            } else if (param.seriesName === 'MA5') {
+                                result += marker + '5日均线: ' + formattedValue + '<br/>';
+                            } else if (param.seriesName === 'MA10') {
+                                result += marker + '10日均线: ' + formattedValue + '<br/>';
+                            } else if (param.seriesName === 'MA20') {
+                                result += marker + '20日均线: ' + formattedValue + '<br/>';
+                            } else if (param.seriesName === 'MA30') {
+                                result += marker + '30日均线: ' + formattedValue + '<br/>';
+                            } else if (param.seriesName === 'MA60') {
+                                result += marker + '60日均线: ' + formattedValue + '<br/>';
+                            } else if (param.seriesName === 'MA120') {
+                                result += marker + '120日均线: ' + formattedValue + '<br/>';
+                            } else if (param.seriesName === 'MA250') {
+                                result += marker + '250日均线: ' + formattedValue + '<br/>';
+                            } else if (param.seriesName === '市盈率百分位') {
+                                result += marker + '市盈率百分位: ' + formattedValue + '%<br/>';
+                            } else if (param.seriesName === '市净率百分位') {
+                                result += marker + '市净率百分位: ' + formattedValue + '%<br/>';
+                            } else if (param.seriesName === '股息率收益率') {
+                                result += marker + '股息率收益率: ' + formattedValue + '%<br/>';
+                            } else if (param.seriesName === '估值百分位') {
+                                result += marker + '估值百分位: ' + formattedValue + '%<br/>';
+                            } else if (param.seriesName === 'Volume') {
+                                result += marker + '成交量: ' + formattedValue + '<br/>';
+                            } else {
+                                result += marker + param.seriesName + ': ' + formattedValue + '<br/>';
+                            }
+                        });
+
+                        return result;
+                    }
+                },
+                axisPointer: {
+                    link: [{ xAxisIndex: 'all' }],
+                    label: {
+                        backgroundColor: '#777'
+                    }
+                },
+                toolbox: {
+                    feature: {
+                        dataZoom: {
+                            yAxisIndex: false
+                        },
+                        brush: {
+                            type: ['lineX', 'clear']
+                        }
+                    }
+                },
+                brush: {
+                    xAxisIndex: 'all',
+                    brushLink: 'all',
+                    outOfBrush: {
+                        colorAlpha: 0.1
+                    }
+                },
+                visualMap: {
+                    show: false,
+                    seriesIndex: 8, // Volume series index
+                    dimension: 2,
+                    pieces: [
+                        {
+                            value: 1,
+                            color: downColor
+                        },
+                        {
+                            value: -1,
+                            color: upColor
+                        }
+                    ]
+                },
+                grid: [
+                    {
+                        left: '10%',
+                        right: '8%',
+                        height: '40%'  // 调整高度以适应新增图表
+                    },
+                    {
+                        left: '10%',
+                        right: '8%',
+                        top: '53%',  // 调整位置
+                        height: '12%' // 减小体积图高度
+                    },
+                    {
+                        left: '10%',
+                        right: '8%',
+                        top: '68%',  // 新增百分位图表位置
+                        height: '12%'
+                    }
+                ],
+                xAxis: [
+                    {
+                        type: 'category',
+                        data: categoryData,
+                        boundaryGap: false,
+                        axisLine: { onZero: false },
+                        splitLine: { show: false },
+                        min: 'dataMin',
+                        max: 'dataMax',
+                        axisPointer: {
+                            z: 100
+                        }
+                    },
+                    {
+                        type: 'category',
+                        gridIndex: 1,
+                        data: categoryData,
+                        boundaryGap: false,
+                        axisLine: { onZero: false },
+                        axisTick: { show: false },
+                        splitLine: { show: false },
+                        axisLabel: { show: false },
+                        min: 'dataMin',
+                        max: 'dataMax'
+                    },
+                    {
+                        type: 'category',
+                        gridIndex: 2,
+                        data: categoryData,
+                        boundaryGap: false,
+                        axisLine: { onZero: false },
+                        axisTick: { show: false },
+                        splitLine: { show: false },
+                        axisLabel: { show: false },
+                        min: 'dataMin',
+                        max: 'dataMax'
+                    }
+                ],
+                yAxis: [
+                    {
+                        scale: true,
+                        splitArea: {
+                            show: true
+                        },
+                        name: 'K线图'
+                    },
+                    {
+                        scale: true,
+                        gridIndex: 1,
+                        splitNumber: 2,
+                        axisLabel: { show: false },
+                        axisLine: { show: false },
+                        axisTick: { show: false },
+                        splitLine: { show: false },
+                        name: '成交量'
+                    },
+                    {
+                        scale: true,
+                        gridIndex: 2,
+                        splitNumber: 3,
+                        axisLabel: { show: true },
+                        axisLine: { show: true },
+                        axisTick: { show: true },
+                        splitLine: { show: false },
+                        name: '估值百分位',
+                        min: 0,
+                        max: 100
+                    }
+                ],
+                dataZoom: [
+                    {
+                        type: 'inside',
+                        xAxisIndex: [0, 1, 2],  // 更新为包含所有x轴
+                        start: 90,
+                        end: 100
+                    },
+                    {
+                        show: true,
+                        xAxisIndex: [0, 1, 2],  // 更新为包含所有x轴
+                        type: 'slider',
+                        top: '85%',
+                        start: 90,
+                        end: 100
+                    }
+                ],
+                series: [
+                    {
+                        name: 'K线',
+                        type: 'candlestick',
+                        data: values,
+                        itemStyle: {
+                            color: upColor,
+                            color0: downColor
+                        }
+                    },
+                    {
+                        name: 'MA5',
+                        type: 'line',
+                        data: ma5,
+                        smooth: true,
+                        symbol: 'none',  // 去掉节点，只保留线条
+                        lineStyle: {
+                            opacity: 0.5
+                        }
+                    },
+                    {
+                        name: 'MA10',
+                        type: 'line',
+                        data: ma10,
+                        smooth: true,
+                        symbol: 'none',  // 去掉节点，只保留线条
+                        lineStyle: {
+                            opacity: 0.5
+                        }
+                    },
+                    {
+                        name: 'MA20',
+                        type: 'line',
+                        data: ma20,
+                        smooth: true,
+                        symbol: 'none',  // 去掉节点，只保留线条
+                        lineStyle: {
+                            opacity: 0.5
+                        }
+                    },
+                    {
+                        name: 'MA30',
+                        type: 'line',
+                        data: ma30,
+                        smooth: true,
+                        symbol: 'none',  // 去掉节点，只保留线条
+                        lineStyle: {
+                            opacity: 0.5
+                        }
+                    },
+                    {
+                        name: 'MA60',
+                        type: 'line',
+                        data: ma60,
+                        smooth: true,
+                        symbol: 'none',  // 去掉节点，只保留线条
+                        lineStyle: {
+                            opacity: 0.5
+                        }
+                    },
+                    {
+                        name: 'MA120',
+                        type: 'line',
+                        data: ma120,
+                        smooth: true,
+                        symbol: 'none',  // 去掉节点，只保留线条
+                        lineStyle: {
+                            opacity: 0.5
+                        }
+                    },
+                    {
+                        name: 'MA250',
+                        type: 'line',
+                        data: ma250,
+                        smooth: true,
+                        symbol: 'none',  // 去掉节点，只保留线条
+                        lineStyle: {
+                            opacity: 0.5
+                        }
+                    },
+                    {
+                        name: 'Volume',
+                        type: 'bar',
+                        xAxisIndex: 1,
+                        yAxisIndex: 1,
+                        data: volumes
+                    },
+                    {
+                        name: '市盈率百分位',
+                        type: 'line',
+                        xAxisIndex: 2,
+                        yAxisIndex: 2,
+                        data: pePercentile,
+                        smooth: true,
+                        symbol: 'none',
+                        lineStyle: {
+                            width: 1,
+                            color: '#999999'  // 灰色，较为低调
+                        }
+                    },
+                    {
+                        name: '市净率百分位',
+                        type: 'line',
+                        xAxisIndex: 2,
+                        yAxisIndex: 2,
+                        data: pbPercentile,
+                        smooth: true,
+                        symbol: 'none',
+                        lineStyle: {
+                            width: 1,
+                            color: '#cccc00'  // 黄绿色，低调但有区分度
+                        }
+                    },
+                    {
+                        name: '股息率收益率',
+                        type: 'line',
+                        xAxisIndex: 2,
+                        yAxisIndex: 2,
+                        data: dyrPercentile,
+                        smooth: true,
+                        symbol: 'none',
+                        lineStyle: {
+                            width: 1,
+                            color: '#8888ff'  // 淡蓝色，低调但有区分度
+                        }
+                    },
+                    {
+                        name: '布林值',
+                        type: 'line',
+                        xAxisIndex: 2,
+                        yAxisIndex: 2,
+                        data: bbPosition,
+                        smooth: true,
+                        symbol: 'none',
+                        lineStyle: {
+                            width: 1,
+                            color: 'rgba(70, 70, 70, 0.5)',
+                            type: 'dashed'  // 虚线形式更低调
+                        }
+                    },
+                    {
+                        name: '估值百分位',
+                        type: 'line',
+                        xAxisIndex: 2,
+                        yAxisIndex: 2,
+                        data: valuationPercentile,
+                        smooth: true,
+                        symbol: 'none',
+                        lineStyle: {
+                            width: 2,
+                            color: '#ff0000'  // 红色，比较明显
+                        }
+                    },
+                    {
+                        name: '高估线',
+                        type: 'line',
+                        xAxisIndex: 2,
+                        yAxisIndex: 2,
+                        data: Array(categoryData.length).fill(80),
+                        smooth: true,
+                        symbol: 'none',
+                        lineStyle: {
+                            color: 'rgba(255, 100, 100, 0.5)',  // 更柔和的红色
+                            width: 1,
+                            type: 'dashed'  // 虚线形式更低调
+                        },
+                        legend: {
+                            show: false  // 在图例中隐藏
+                        }
+                    },
+                    {
+                        name: '低估线',
+                        type: 'line',
+                        xAxisIndex: 2,
+                        yAxisIndex: 2,
+                        data: Array(categoryData.length).fill(20),
+                        smooth: true,
+                        symbol: 'none',
+                        lineStyle: {
+                            color: 'rgba(100, 255, 100, 0.5)',  // 更柔和的绿色
+                            width: 1,
+                            type: 'dashed'  // 虚线形式更低调
+                        },
+                        legend: {
+                            show: false  // 在图例中隐藏
+                        }
+                    }
+                ]
+            };
+
+            // 应用配置
+            myChart.setOption(option, true);
+        }
+
+        // 处理成分股权重数据的函数
+        function processConstituentWeightings(data) {
+            return data.map(item => {
+                return {
+                    stockCode: item.stockCode,
+                    name: item.name,
+                    weighting: item.weighting
+                };
+            });
+        }
+
+        // 处理追踪基金数据的函数
+        function processTrackingFunds(data) {
+            return data.map(item => {
+                // 根据exchange字段确定基金类型
+                let fundType = '其他';
+                if (item.exchange === 'sz' || item.exchange === 'sh') {
+                    fundType = '场内基金';
+                } else if (item.exchange === 'jj') {
+                    fundType = '场外基金';
+                }
+
+                return {
+                    stockCode: item.stockCode,
+                    name: item.name,
+                    shortName: item.shortName,
+                    fundType: fundType
+                };
+            });
+        }
+
+        // 获取数据
+        // 修改前: fetch('index/000016.json')
+        // 修改后: 从URL参数中获取stockCode，动态加载对应的JSON文件
+        const urlParams = new URLSearchParams(window.location.search);
+        const stockCode = urlParams.get('stockCode') || '000016'; // 默认值为000016
+        fetch(`index/${stockCode}.json`)
+            .then(response => response.json())
+            .then(rawData => {
+                // 设置标题和更新时间
+                document.getElementById('pageTitle').textContent = rawData.name || '基金展示';
+                if (rawData.update) {
+                    document.getElementById('updateTime').textContent = '更新时间: ' + rawData.update;
+                }
+
+                // 修改这里：现在数据在dataframe字段中
+                const data = rawData.dataframe;
+                processDataframe(data);
+
+                // 初始化成分股表格
+                $('#constituentTable').DataTable({
+                    data: processConstituentWeightings(rawData.constituent_weightings),
+                    columns: [
+                        { data: 'stockCode' },
+                        { data: 'name' },
+                        {
+                            data: 'weighting',
+                            render: function (data, type, row) {
+                                if (type === 'display' || type === 'filter') {
+                                    return (data * 100).toFixed(2) + '%';
+                                }
+                                return data;
+                            }
+                        }
+                    ],
+                    order: [[2, 'desc']], // 默认按权重降序排列
+                    paging: false, // 去掉分页功能
+                    language: {
+                        "sProcessing": "处理中...",
+                        "sLengthMenu": "显示 _MENU_ 项结果",
+                        "sZeroRecords": "没有匹配结果",
+                        "sInfo": "显示第 _START_ 至 _END_ 项结果，共 _TOTAL_ 项",
+                        "sInfoEmpty": "显示第 0 至 0 项结果，共 0 项",
+                        "sInfoFiltered": "(由 _MAX_ 项结果过滤)",
+                        "sInfoPostFix": "",
+                        "sSearch": "搜索:",
+                        "sUrl": "",
+                        "sEmptyTable": "表中数据为空",
+                        "sLoadingRecords": "载入中...",
+                        "sInfoThousands": ",",
+                        "oPaginate": {
+                            "sFirst": "首页",
+                            "sPrevious": "上页",
+                            "sNext": "下页",
+                            "sLast": "末页"
+                        },
+                        "oAria": {
+                            "sSortAscending": ": 以升序排列此列",
+                            "sSortDescending": ": 以降序排列此列"
+                        }
+                    }
+                });
+
+                // 初始化追踪基金表格
+                $('#trackingFundTable').DataTable({
+                    data: processTrackingFunds(rawData.tracking_fund),
+                    columns: [
+                        { data: 'stockCode' },
+                        { data: 'name' },
+                        { data: 'shortName' },
+                        { data: 'fundType' }
+                    ],
+                    order: [[0, 'asc']], // 默认按基金代码升序排列
+                    paging: false, // 去掉分页功能
+                    language: {
+                        "sProcessing": "处理中...",
+                        "sLengthMenu": "显示 _MENU_ 项结果",
+                        "sZeroRecords": "没有匹配结果",
+                        "sInfo": "显示第 _START_ 至 _END_ 项结果，共 _TOTAL_ 项",
+                        "sInfoEmpty": "显示第 0 至 0 项结果，共 0 项",
+                        "sInfoFiltered": "(由 _MAX_ 项结果过滤)",
+                        "sInfoPostFix": "",
+                        "sSearch": "搜索:",
+                        "sUrl": "",
+                        "sEmptyTable": "表中数据为空",
+                        "sLoadingRecords": "载入中...",
+                        "sInfoThousands": ",",
+                        "oPaginate": {
+                            "sFirst": "首页",
+                            "sPrevious": "上页",
+                            "sNext": "下页",
+                            "sLast": "末页"
+                        },
+                        "oAria": {
+                            "sSortAscending": ": 以升序排列此列",
+                            "sSortDescending": ": 以降序排列此列"
+                        }
+                    }
+                });
+            })
+            .catch(error => {
+                console.error('Error loading data:', error);
+            })
+
+    </script>
+
+</body>
+
+</html>
