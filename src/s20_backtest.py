@@ -248,7 +248,7 @@ def backtest_strategy(data_path: pathlib.Path):
             index_info = pickle.load(f)
 
         backtest_log,backtest_stat = backtest_index(index_info)
-        logging.info(f"完成计算{index['stockCode']}的回测")
+        # logging.info(f"完成计算{index['stockCode']}的回测")
 
         index_info["backtest_log"] = backtest_log
         index_info["backtest_stat"] = backtest_stat

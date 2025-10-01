@@ -3,9 +3,10 @@ import pickle
 import logging
 import pytz
 import pathlib
-
 from datetime import datetime, timedelta
 import pandas as pd
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from utils import retry, find_dict_by_field, get_dates_ranges
 from utils import query_json
@@ -115,16 +116,9 @@ def fetch_index_fundamental(index: dict):
     return df
 
 
-def fetch_index_info(data_path: pathlib.Path):
-    filtered_index = json.load(open(data_path.joinpath("cn_index_filtered.json"), "r", encoding="utf-8"))
-    company_info = json.load(open(data_path.joinpath("cn_company.json"), "r", encoding="utf-8"))
-
-    index_dir = data_path.joinpath("index_info")
-    if not index_dir.exists():
-        index_dir.mkdir()
-
-    for index in filtered_index:
-
+def fetch_single_index_data(index, company_info):
+    """抓取单个指数的所有数据"""
+    try:
         # 抓取权重信息
         logging.info(f"正在抓取{index['stockCode']}的权重信息")
         constituent_weightings = fetch_index_constituent_weightings(index, company_info)
@@ -166,6 +160,61 @@ def fetch_index_info(data_path: pathlib.Path):
 
         index["dataframe"] = df
         index["update"] = datetime.now(SHANGHAI_TZ).strftime("%Y-%m-%d %H:%M:%S")
+        
+        return index
+    except Exception as e:
+        logging.error(f"抓取{index['stockCode']}数据时出错: {e}")
+        return None
 
-        with open(index_dir.joinpath(f"{index['stockCode']}.pickle"), "wb") as f:
-            pickle.dump(index, f)
+
+def fetch_index_info(data_path: pathlib.Path):
+    filtered_index = json.load(open(data_path.joinpath("cn_index_filtered.json"), "r", encoding="utf-8"))
+    company_info = json.load(open(data_path.joinpath("cn_company.json"), "r", encoding="utf-8"))
+
+    index_dir = data_path.joinpath("index_info")
+    if not index_dir.exists():
+        index_dir.mkdir()
+
+    # 记录开始时间
+    start_time = time.time()
+    total_count = len(filtered_index)
+    
+    # 使用线程池并行抓取数据，最多5个线程
+    with ThreadPoolExecutor(max_workers=15) as executor:
+        # 提交所有任务
+        future_to_index = {
+            executor.submit(fetch_single_index_data, index, company_info): index 
+            for index in filtered_index
+        }
+        
+        # 处理完成的任务
+        completed_count = 0
+        for future in as_completed(future_to_index):
+            completed_count += 1
+            index = future_to_index[future]
+            try:
+                result = future.result()
+                if result is not None:
+                    # 保存结果
+                    with open(index_dir.joinpath(f"{result['stockCode']}.pickle"), "wb") as f:
+                        pickle.dump(result, f)
+                    logging.info(f"已完成 {result['stockCode']} 的数据抓取和保存")
+                else:
+                    logging.error(f"未能成功抓取 {index['stockCode']} 的数据")
+            except Exception as e:
+                logging.error(f"处理 {index['stockCode']} 的结果时出错: {e}")
+            
+            # 计算进度信息
+            elapsed_time = time.time() - start_time
+            avg_time_per_item = elapsed_time / completed_count if completed_count > 0 else 0
+            remaining_items = total_count - completed_count
+            estimated_remaining_time = avg_time_per_item * remaining_items
+            
+            # 格式化时间显示
+            elapsed_formatted = str(timedelta(seconds=int(elapsed_time)))
+            remaining_formatted = str(timedelta(seconds=int(estimated_remaining_time)))
+            
+            # 打印进度信息
+            logging.info(f"进度: {completed_count}/{total_count} ({completed_count/total_count*100:.1f}%) "
+                        f"已用时: {elapsed_formatted} "
+                        f"预计剩余: {remaining_formatted}")
