@@ -33,6 +33,7 @@ jobs:
 
     - name: Run Main
       run: python3 main.py
+      working-directory: src
       env:
         LIXINGER_TOKEN: ${{ secrets.LIXINGER_TOKEN }}
 
