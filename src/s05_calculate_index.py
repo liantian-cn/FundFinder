@@ -17,8 +17,7 @@ pd.set_option('display.max_rows', None)
 
 def calculate_index(data_path: pathlib.Path, config: dict):
     filtered_index = json.load(open(data_path.joinpath("cn_index_filtered.json"), "r", encoding="utf-8"))
-    company_info = json.load(open(data_path.joinpath("cn_company.json"), "r", encoding="utf-8"))
-
+    
     index_dir = data_path.joinpath("index_info")
     if not index_dir.exists():
         index_dir.mkdir()

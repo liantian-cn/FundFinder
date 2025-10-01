@@ -8,7 +8,8 @@ from s02_filter_cn_index import filter_cn_index
 from s03_cn_company import fetch_cn_company
 from s04_fetch_index_info import fetch_index_info
 from s05_calculate_index import calculate_index
-from s06_export_to_js import export_to_js
+from s20_backtest import  backtest_strategy
+from s90_export_to_js import export_to_js
 
 BASE_DIR = pathlib.Path(__file__).parent.parent
 
@@ -30,8 +31,13 @@ def main():
     # 获取指数的所有信息
     # fetch_index_info(BASE_DIR.joinpath("data"))
     # 计算每个指数
-    calculate_index(BASE_DIR.joinpath("data"), config)
-    # # 导出到json文件
+    # calculate_index(BASE_DIR.joinpath("data"), config)
+
+    # 回归
+
+    backtest_strategy(BASE_DIR.joinpath("data"))
+
+    # 导出到json文件
     export_to_js(BASE_DIR.joinpath("data"), BASE_DIR.joinpath("output"))
     return
 

@@ -36,48 +36,23 @@
             font-size: 0.9rem;
         }
 
-        .container-fluid.h-100 {
-            height: 100vh !important;
+        /* 修改container-fluid样式，使用calc计算剩余高度 */
+        .container-fluid {
+            height: calc(100vh - 40px);
+            /* 减去navbar的最小高度 */
             display: flex;
             flex-direction: column;
             padding: 0;
         }
 
-        #accordionExample {
+        #kline {
             flex: 1;
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-        }
-
-        .card {
-            flex: 0 0 auto;
-            /* 默认只占用需要的高度 */
-        }
-
-        .card.expanded {
-            flex: 1;
-            /* 展开时占据剩余空间 */
-        }
-
-        .card-header {
-            flex: 0 0 auto;
-        }
-
-        .collapse:not(.show) {
-            display: none;
-        }
-
-        .card-body {
-            flex: 1;
-            overflow-y: auto;
-            height: calc(100vh - 100px);
-            /* 大致减去header高度 */
+            min-height: 0;
         }
 
         /* 表格样式 */
         .table-wrapper {
-            max-height: 100%;
+            max-height: 70vh;
             overflow: auto;
         }
 
@@ -98,147 +73,186 @@
             position: sticky;
             top: 0;
         }
+
+        .btn-container {
+            display: flex;
+            justify-content: center;
+            padding: 10px;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-container .btn {
+            min-width: 120px;
+        }
+
+        .modal-body {
+            max-height: 80vh;
+            overflow-y: auto;
+        }
     </style>
 </head>
 
 <body style="height: 100%;">
     <nav class="navbar navbar-expand navbar-light bg-light">
-
-
-
         <span class="navbar-brand mb-0 h1" id="pageTitle">标题</span>
-
-        <span class="navbar-text" id="updateTime">
-
-            更新时间
-
-        </span>
-
-
-
+        <span class="navbar-text" id="updateTime">更新时间</span>
     </nav>
 
-    <div class="container-fluid h-100">
-        <div class="accordion" id="accordionExample">
-            <div class="card expanded">
-                <div class="card-header" id="headingOne">
-                    <h2 class="mb-0">
-                        <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse"
-                            data-target="#collapseKLine" aria-expanded="true" aria-controls="collapseKLine">
-                            K线图
-                        </button>
-                    </h2>
-                </div>
+    <div class="container-fluid">
+        <!-- 按钮区域 -->
+        <div class="btn-container">
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#sharesModal">
+                指数成分股
+            </button>
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#fundsModal">
+                指数关联基金
+            </button>
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#backtestLogModal">
+                策略回测日志
+            </button>
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#backtestStatModal">
+                策略回测统计
+            </button>
+        </div>
+        <!-- K线图区域 -->
+        <div id="kline" class="w-100 h-100"></div>
+    </div>
 
-                <div id="collapseKLine" class="collapse show" aria-labelledby="headingOne"
-                    data-parent="#accordionExample">
-                    <div class="card-body" id="kline">
-                        Some placeholder content for the first accordion panel. This panel is shown by default, thanks
-                        to the
-                        <code>.show</code> class.
+    <!-- 指数成分股 Modal -->
+    <div class="modal fade" id="sharesModal" tabindex="-1" aria-labelledby="sharesModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="sharesModalLabel">指数成分股</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="table-wrapper">
+                        <table id="constituentTable" class="table table-striped table-bordered" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th>股票代码</th>
+                                    <th>名称</th>
+                                    <th>权重</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-            </div>
-            <div class="card">
-                <div class="card-header" id="headingTwo">
-                    <h2 class="mb-0">
-                        <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse"
-                            data-target="#collapseShares" aria-expanded="false" aria-controls="collapseShares">
-                            指数成分股
-                        </button>
-                    </h2>
-                </div>
-                <div id="collapseShares" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionExample">
-                    <div class="card-body">
-                        <div class="table-wrapper">
-                            <table id="constituentTable" class="table table-striped table-bordered" style="width:100%">
-                                <thead>
-                                    <tr>
-                                        <th>股票代码</th>
-                                        <th>名称</th>
-                                        <th>权重</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="card">
-                <div class="card-header" id="headingThree">
-                    <h2 class="mb-0">
-                        <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse"
-                            data-target="#collapseFunds" aria-expanded="false" aria-controls="collapseFunds">
-                            指数关联基金
-                        </button>
-                    </h2>
-                </div>
-                <div id="collapseFunds" class="collapse" aria-labelledby="headingThree" data-parent="#accordionExample">
-                    <div class="card-body">
-                        <div class="table-wrapper">
-                            <table id="trackingFundTable" class="table table-striped table-bordered" style="width:100%">
-                                <thead>
-                                    <tr>
-                                        <th>基金代码</th>
-                                        <th>基金全名</th>
-                                        <th>基金简称</th>
-                                        <th>基金类型</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="card">
-                <div class="card-header" id="headingFour">
-                    <h2 class="mb-0">
-                        <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse"
-                            data-target="#collapseLogs" aria-expanded="false" aria-controls="collapseLogs">
-                            交易日志
-                        </button>
-                    </h2>
-                </div>
-                <div id="collapseLogs" class="collapse" aria-labelledby="headingFour" data-parent="#accordionExample">
-                    <div class="card-body">
-                        <div class="table-wrapper">
-                            <p>这里是交易日志内容占位符</p>
-                            <ul>
-                                <li>2025-09-30: 操作记录1</li>
-                                <li>2025-09-29: 操作记录2</li>
-                                <li>2025-09-28: 操作记录3</li>
-                                <li>2025-09-27: 操作记录4</li>
-                                <li>2025-09-26: 操作记录5</li>
-                            </ul>
-                            <p>更多日志内容...</p>
-                        </div>
-                    </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <script>
-        // 监听折叠面板的显示/隐藏事件
-        $('.collapse').on('shown.bs.collapse', function () {
-            // 移除所有卡片的expanded类
-            $('.card').removeClass('expanded');
+    <!-- 指数关联基金 Modal -->
+    <div class="modal fade" id="fundsModal" tabindex="-1" aria-labelledby="fundsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="fundsModalLabel">指数关联基金</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="table-wrapper">
+                        <table id="trackingFundTable" class="table table-striped table-bordered" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th>基金代码</th>
+                                    <th>基金全名</th>
+                                    <th>基金简称</th>
+                                    <th>基金类型</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-            // 给包含当前展开面板的卡片添加expanded类
-            $(this).closest('.card').addClass('expanded');
-        });
+    <!-- 策略回测日志 Modal -->
+    <div class="modal fade" id="backtestLogModal" tabindex="-1" aria-labelledby="backtestLogModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="backtestLogModalLabel">策略回测日志</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="table-wrapper">
+                        <table id="backtestLogTable" class="table table-striped table-bordered" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th>日期</th>
+                                    <th>策略名称</th>
+                                    <th>操作方向</th>
+                                    <th>金额</th>
+                                    <th>价格</th>
+                                    <th>现金</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-        $('.collapse').on('hidden.bs.collapse', function () {
-            // 当面板关闭时，移除expanded类
-            $(this).closest('.card').removeClass('expanded');
-        });
-    </script>
-
-
+    <!-- 策略回测统计 Modal -->
+    <div class="modal fade" id="backtestStatModal" tabindex="-1" aria-labelledby="backtestStatModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="backtestStatModalLabel">策略回测统计</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="table-wrapper">
+                        <table id="backtestStatTable" class="table table-striped table-bordered" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th>策略名称</th>
+                                    <th>总持仓天数</th>
+                                    <th>总收益率</th>
+                                    <th>年化收益率</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
         const upColor = '#00da3c';
@@ -320,7 +334,7 @@
                     type: 'scroll',
                     orient: 'horizontal',
                     left: 'center',
-                    top: '30',
+                    top: '80',
                     data: ['MA5', 'MA10', 'MA20', 'MA30', 'MA60', 'MA120', 'MA250'],
                     selected: {
                         'MA5': true,
@@ -332,7 +346,7 @@
                         'MA250': true
                     },
                     textStyle: {
-                        fontSize: 12
+                        fontSize: 14
                     }
                 },
                 tooltip: {
@@ -767,13 +781,11 @@
 
         // 处理成分股权重数据的函数
         function processConstituentWeightings(data) {
-            return data.map(item => {
-                return {
-                    stockCode: item.stockCode,
-                    name: item.name,
-                    weighting: item.weighting
-                };
-            });
+            return data.map(item => ({
+                stockCode: item.stockCode,
+                name: item.name,
+                weighting: item.weighting
+            }));
         }
 
         // 处理追踪基金数据的函数
@@ -796,6 +808,144 @@
             });
         }
 
+        // 处理回测日志数据的函数
+        function processBacktestLog(data) {
+            return data.map(item => ({
+                date: item.date,
+                strategy_name: item.strategy_name,
+                direction: item.direction,
+                amount: item.amount,
+                price: item.price,
+                cash: item.cash
+            }));
+        }
+
+        // 处理回测统计数据的函数
+        function processBacktestStat(data) {
+            return data.map(item => ({
+                strategy_name: item.strategy_name,
+                holding_days: item.holding_days,
+                total_return: item.total_return,
+                annual_return: item.annual_return
+            }));
+        }
+
+        // 通用表格渲染函数
+        function renderTable(tableId, data, columns, defaultOrder) {
+            return $(tableId).DataTable({
+                data: data,
+                columns: columns,
+                order: defaultOrder,
+                paging: false
+            });
+        }
+
+        // 初始化成分股表格
+        function initConstituentTable(data) {
+            renderTable('#constituentTable', processConstituentWeightings(data), [
+                { data: 'stockCode' },
+                { data: 'name' },
+                {
+                    data: 'weighting',
+                    render: function (data, type, row) {
+                        if (type === 'display' || type === 'filter') {
+                            return (data * 100).toFixed(2) + '%';
+                        }
+                        return data;
+                    }
+                }
+            ], [[2, 'desc']]);
+        }
+
+        // 初始化追踪基金表格
+        function initTrackingFundTable(data) {
+            renderTable('#trackingFundTable', processTrackingFunds(data), [
+                { data: 'stockCode' },
+                { data: 'name' },
+                { data: 'shortName' },
+                { data: 'fundType' }
+            ], [[0, 'asc']]);
+        }
+
+        // 初始化回测日志表格
+        function initBacktestLogTable(data) {
+            renderTable('#backtestLogTable', processBacktestLog(data), [
+                { data: 'date' },
+                { data: 'strategy_name' },
+                {
+                    data: 'direction',
+                    render: function (data, type, row) {
+                        if (type === 'display' || type === 'filter') {
+                            switch (data) {
+                                case 'buy':
+                                    return '买入';
+                                case 'take_profit_sell':
+                                    return '止盈卖出';
+                                case 'stop_loss_sell':
+                                    return '止损卖出';
+                                default:
+                                    return data;
+                            }
+                        }
+                        return data;
+                    }
+                },
+                {
+                    data: 'amount',
+                    render: function (data, type, row) {
+                        if (type === 'display' || type === 'filter') {
+                            return data.toFixed(2);
+                        }
+                        return data;
+                    }
+                },
+                {
+                    data: 'price',
+                    render: function (data, type, row) {
+                        if (type === 'display' || type === 'filter') {
+                            return data.toFixed(4);
+                        }
+                        return data;
+                    }
+                },
+                {
+                    data: 'cash',
+                    render: function (data, type, row) {
+                        if (type === 'display' || type === 'filter') {
+                            return data.toFixed(2);
+                        }
+                        return data;
+                    }
+                }
+            ], [[0, 'desc']]);
+        }
+
+        // 初始化回测统计表格
+        function initBacktestStatTable(data) {
+            renderTable('#backtestStatTable', processBacktestStat(data), [
+                { data: 'strategy_name' },
+                { data: 'holding_days' },
+                {
+                    data: 'total_return',
+                    render: function (data, type, row) {
+                        if (type === 'display' || type === 'filter') {
+                            return (data * 100).toFixed(2) + '%';
+                        }
+                        return data;
+                    }
+                },
+                {
+                    data: 'annual_return',
+                    render: function (data, type, row) {
+                        if (type === 'display' || type === 'filter') {
+                            return (data * 100).toFixed(2) + '%';
+                        }
+                        return data;
+                    }
+                }
+            ], [[3, 'desc']]);
+        }
+
         // 获取数据
         // 修改前: fetch('index/000016.json')
         // 修改后: 从URL参数中获取stockCode，动态加载对应的JSON文件
@@ -811,89 +961,19 @@
                 }
 
                 // 修改这里：现在数据在dataframe字段中
-                const data = rawData.dataframe;
-                processDataframe(data);
+                processDataframe(rawData.dataframe);
 
-                // 初始化成分股表格
-                $('#constituentTable').DataTable({
-                    data: processConstituentWeightings(rawData.constituent_weightings),
-                    columns: [
-                        { data: 'stockCode' },
-                        { data: 'name' },
-                        {
-                            data: 'weighting',
-                            render: function (data, type, row) {
-                                if (type === 'display' || type === 'filter') {
-                                    return (data * 100).toFixed(2) + '%';
-                                }
-                                return data;
-                            }
-                        }
-                    ],
-                    order: [[2, 'desc']], // 默认按权重降序排列
-                    paging: false, // 去掉分页功能
-                    language: {
-                        "sProcessing": "处理中...",
-                        "sLengthMenu": "显示 _MENU_ 项结果",
-                        "sZeroRecords": "没有匹配结果",
-                        "sInfo": "显示第 _START_ 至 _END_ 项结果，共 _TOTAL_ 项",
-                        "sInfoEmpty": "显示第 0 至 0 项结果，共 0 项",
-                        "sInfoFiltered": "(由 _MAX_ 项结果过滤)",
-                        "sInfoPostFix": "",
-                        "sSearch": "搜索:",
-                        "sUrl": "",
-                        "sEmptyTable": "表中数据为空",
-                        "sLoadingRecords": "载入中...",
-                        "sInfoThousands": ",",
-                        "oPaginate": {
-                            "sFirst": "首页",
-                            "sPrevious": "上页",
-                            "sNext": "下页",
-                            "sLast": "末页"
-                        },
-                        "oAria": {
-                            "sSortAscending": ": 以升序排列此列",
-                            "sSortDescending": ": 以降序排列此列"
-                        }
-                    }
-                });
+                // 初始化成分股和基金表格
+                initConstituentTable(rawData.constituent_weightings);
+                initTrackingFundTable(rawData.tracking_fund);
 
-                // 初始化追踪基金表格
-                $('#trackingFundTable').DataTable({
-                    data: processTrackingFunds(rawData.tracking_fund),
-                    columns: [
-                        { data: 'stockCode' },
-                        { data: 'name' },
-                        { data: 'shortName' },
-                        { data: 'fundType' }
-                    ],
-                    order: [[0, 'asc']], // 默认按基金代码升序排列
-                    paging: false, // 去掉分页功能
-                    language: {
-                        "sProcessing": "处理中...",
-                        "sLengthMenu": "显示 _MENU_ 项结果",
-                        "sZeroRecords": "没有匹配结果",
-                        "sInfo": "显示第 _START_ 至 _END_ 项结果，共 _TOTAL_ 项",
-                        "sInfoEmpty": "显示第 0 至 0 项结果，共 0 项",
-                        "sInfoFiltered": "(由 _MAX_ 项结果过滤)",
-                        "sInfoPostFix": "",
-                        "sSearch": "搜索:",
-                        "sUrl": "",
-                        "sEmptyTable": "表中数据为空",
-                        "sLoadingRecords": "载入中...",
-                        "sInfoThousands": ",",
-                        "oPaginate": {
-                            "sFirst": "首页",
-                            "sPrevious": "上页",
-                            "sNext": "下页",
-                            "sLast": "末页"
-                        },
-                        "oAria": {
-                            "sSortAscending": ": 以升序排列此列",
-                            "sSortDescending": ": 以降序排列此列"
-                        }
-                    }
-                });
+                // 初始化回测日志和统计表格
+                if (rawData.backtest_log) {
+                    initBacktestLogTable(rawData.backtest_log);
+                }
+                if (rawData.backtest_stat) {
+                    initBacktestStatTable(rawData.backtest_stat);
+                }
             })
             .catch(error => {
                 console.error('Error loading data:', error);

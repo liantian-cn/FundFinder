@@ -2,12 +2,10 @@ import json
 import logging
 import pickle
 import pathlib
-import pandas as pd
 
 
 def export_to_js(data_path: pathlib.Path, output_path: pathlib.Path, ):
     filtered_index = json.load(open(data_path.joinpath("cn_index_filtered.json"), "r", encoding="utf-8"))
-    company_info = json.load(open(data_path.joinpath("cn_company.json"), "r", encoding="utf-8"))
 
     index_dir = data_path.joinpath("index_info")
     output_path = output_path.joinpath("index")
