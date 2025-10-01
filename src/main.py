@@ -22,7 +22,7 @@ def init():
     # 01
     # fetch_cn_index(BASE_DIR.joinpath("data"))
     # 02
-    # filter_cn_index(BASE_DIR.joinpath("data"), config)
+    filter_cn_index(BASE_DIR.joinpath("data"), config)
     # 获取公司数据
     # fetch_cn_company(BASE_DIR.joinpath("data"))
     return
