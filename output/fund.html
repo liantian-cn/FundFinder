@@ -240,6 +240,7 @@
                                     <th>总持仓天数</th>
                                     <th>总收益率</th>
                                     <th>年化收益率</th>
+                                    <th>剩余资金</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -826,7 +827,8 @@
                 strategy_name: item.strategy_name,
                 holding_days: item.holding_days,
                 total_return: item.total_return,
-                annual_return: item.annual_return
+                annual_return: item.annual_return,
+                capital: item.capital,
             }));
         }
 
@@ -883,6 +885,8 @@
                                     return '止盈卖出';
                                 case 'stop_loss_sell':
                                     return '止损卖出';
+                                case 'force_sell':
+                                    return '强制卖出';
                                 default:
                                     return data;
                             }
@@ -929,7 +933,7 @@
                     data: 'total_return',
                     render: function (data, type, row) {
                         if (type === 'display' || type === 'filter') {
-                            return (data * 100).toFixed(2) + '%';
+                            return (data ).toFixed(2);
                         }
                         return data;
                     }
@@ -939,6 +943,15 @@
                     render: function (data, type, row) {
                         if (type === 'display' || type === 'filter') {
                             return (data * 100).toFixed(2) + '%';
+                        }
+                        return data;
+                    }
+                },
+               {
+                    data: 'capital',
+                    render: function (data, type, row) {
+                        if (type === 'display' || type === 'filter') {
+                            return (data * 100).toFixed(2);
                         }
                         return data;
                     }

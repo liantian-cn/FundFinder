@@ -24,8 +24,17 @@ def export_home(data_path: pathlib.Path, output_path: pathlib.Path, ):
         entry["name"] = index_info["name"]
 
         backtest_stat = index_info["backtest_stat"]
-        annual_returns = [stat["annual_return"] for stat in backtest_stat if stat["holding_days"] > 20]
-        entry["backtest_avg"] = np.mean(annual_returns) if annual_returns else 0
+
+        # 再对holding_days求和，获得总持仓时间
+        total_holding_days = sum(stat["holding_days"] for stat in backtest_stat)
+
+        backtest_avg = 0
+        for stat in backtest_stat:
+            # 统计权重，来自持仓时间
+            stat_weight = stat["holding_days"]/total_holding_days
+            backtest_avg += stat_weight * stat["annual_return"]
+            
+        entry["backtest_avg"] = backtest_avg
         # print(entry)
 
         result.append(entry)
@@ -38,4 +47,3 @@ def export_home(data_path: pathlib.Path, output_path: pathlib.Path, ):
 
     with open(output_path.joinpath("home.json"), "w", encoding="utf-8") as f:
         json.dump(result, f, ensure_ascii=False, indent=4)
-    

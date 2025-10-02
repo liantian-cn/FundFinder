@@ -21,6 +21,7 @@ def backtest_index(index_info):
     df = index_info["dataframe"].copy()
     # 确保日期列是datetime类型
     df['日期'] = pd.to_datetime(df['日期'])
+    # print(df)
 
     # 设置回测开始时间：2016年1月1日之后，并且至少是第250个交易日
     start_date = datetime(2016, 1, 1)
@@ -43,26 +44,47 @@ def backtest_index(index_info):
 
     # 初始化5个份额的策略参数
     strategies = [
-        {'buy_threshold': 0.10, 'sell_threshold': 0.40, 'name': '策略.10-.40'},
-        {'buy_threshold': 0.10, 'sell_threshold': 0.50, 'name': '策略.10-.50'},
-        {'buy_threshold': 0.15, 'sell_threshold': 0.45, 'name': '策略.15-.45'},
-        {'buy_threshold': 0.15, 'sell_threshold': 0.55, 'name': '策略.15-.55'},
-        {'buy_threshold': 0.20, 'sell_threshold': 0.50, 'name': '策略.20-.50'},
-        {'buy_threshold': 0.20, 'sell_threshold': 0.60, 'name': '策略.20-.60'},
-        {'buy_threshold': 0.25, 'sell_threshold': 0.55, 'name': '策略.25-.55'},
-        {'buy_threshold': 0.25, 'sell_threshold': 0.65, 'name': '策略.25-.65'},
-        {'buy_threshold': 0.30, 'sell_threshold': 0.60, 'name': '策略.30-.60'},
-        {'buy_threshold': 0.30, 'sell_threshold': 0.70, 'name': '策略.30-.70'},
-        {'buy_threshold': 0.35, 'sell_threshold': 0.65, 'name': '策略.35-.65'},
-        {'buy_threshold': 0.35, 'sell_threshold': 0.75, 'name': '策略.35-.75'},
-        {'buy_threshold': 0.40, 'sell_threshold': 0.70, 'name': '策略.40-.70'},
-        {'buy_threshold': 0.40, 'sell_threshold': 0.80, 'name': '策略.40-.80'},
-        {'buy_threshold': 0.45, 'sell_threshold': 0.75, 'name': '策略.45-.75'},
-        {'buy_threshold': 0.45, 'sell_threshold': 0.85, 'name': '策略.45-.85'},
-        {'buy_threshold': 0.50, 'sell_threshold': 0.80, 'name': '策略.50-.80'},
-        {'buy_threshold': 0.50, 'sell_threshold': 0.90, 'name': '策略.50-.90'},
-        {'buy_threshold': 0.55, 'sell_threshold': 0.85, 'name': '策略.55-.85'},
-        {'buy_threshold': 0.55, 'sell_threshold': 0.95, 'name': '策略.55-.95'}
+        {'buy_threshold': 0.10, 'sell_threshold': 0.40, 'name': '10-40估值线', "mode": 1},
+        {'buy_threshold': 0.10, 'sell_threshold': 0.50, 'name': '10-50估值线', "mode": 1},
+        {'buy_threshold': 0.15, 'sell_threshold': 0.45, 'name': '15-45估值线', "mode": 1},
+        {'buy_threshold': 0.15, 'sell_threshold': 0.55, 'name': '15-55估值线', "mode": 1},
+        {'buy_threshold': 0.20, 'sell_threshold': 0.50, 'name': '20-50估值线', "mode": 1},
+        {'buy_threshold': 0.20, 'sell_threshold': 0.60, 'name': '20-60估值线', "mode": 1},
+        {'buy_threshold': 0.25, 'sell_threshold': 0.55, 'name': '25-55估值线', "mode": 1},
+        {'buy_threshold': 0.25, 'sell_threshold': 0.65, 'name': '25-65估值线', "mode": 1},
+        {'buy_threshold': 0.30, 'sell_threshold': 0.60, 'name': '30-60估值线', "mode": 1},
+        {'buy_threshold': 0.30, 'sell_threshold': 0.70, 'name': '30-70估值线', "mode": 1},
+        {'buy_threshold': 0.35, 'sell_threshold': 0.65, 'name': '35-65估值线', "mode": 1},
+        {'buy_threshold': 0.35, 'sell_threshold': 0.75, 'name': '35-75估值线', "mode": 1},
+        {'buy_threshold': 0.40, 'sell_threshold': 0.70, 'name': '40-70估值线', "mode": 1},
+        {'buy_threshold': 0.40, 'sell_threshold': 0.80, 'name': '40-80估值线', "mode": 1},
+        {'buy_threshold': 0.45, 'sell_threshold': 0.75, 'name': '45-75估值线', "mode": 1},
+        {'buy_threshold': 0.45, 'sell_threshold': 0.85, 'name': '45-85估值线', "mode": 1},
+        {'buy_threshold': 0.50, 'sell_threshold': 0.80, 'name': '50-80估值线', "mode": 1},
+        {'buy_threshold': 0.50, 'sell_threshold': 0.90, 'name': '50-90估值线', "mode": 1},
+        {'buy_threshold': 0.55, 'sell_threshold': 0.85, 'name': '55-85估值线', "mode": 1},
+        {'buy_threshold': 0.55, 'sell_threshold': 0.95, 'name': '55-95估值线', "mode": 1},
+        
+        {'buy_threshold': 0.10, 'sell_threshold': 0.40, 'name': '10-40布林线', "mode": 2},
+        {'buy_threshold': 0.10, 'sell_threshold': 0.50, 'name': '10-50布林线', "mode": 2},
+        {'buy_threshold': 0.15, 'sell_threshold': 0.45, 'name': '15-45布林线', "mode": 2},
+        {'buy_threshold': 0.15, 'sell_threshold': 0.55, 'name': '15-55布林线', "mode": 2},
+        {'buy_threshold': 0.20, 'sell_threshold': 0.50, 'name': '20-50布林线', "mode": 2},
+        {'buy_threshold': 0.20, 'sell_threshold': 0.60, 'name': '20-60布林线', "mode": 2},
+        {'buy_threshold': 0.25, 'sell_threshold': 0.55, 'name': '25-55布林线', "mode": 2},
+        {'buy_threshold': 0.25, 'sell_threshold': 0.65, 'name': '25-65布林线', "mode": 2},
+        {'buy_threshold': 0.30, 'sell_threshold': 0.60, 'name': '30-60布林线', "mode": 2},
+        {'buy_threshold': 0.30, 'sell_threshold': 0.70, 'name': '30-70布林线', "mode": 2},
+        {'buy_threshold': 0.35, 'sell_threshold': 0.65, 'name': '35-65布林线', "mode": 2},
+        {'buy_threshold': 0.35, 'sell_threshold': 0.75, 'name': '35-75布林线', "mode": 2},
+        {'buy_threshold': 0.40, 'sell_threshold': 0.70, 'name': '40-70布林线', "mode": 2},
+        {'buy_threshold': 0.40, 'sell_threshold': 0.80, 'name': '40-80布林线', "mode": 2},
+        {'buy_threshold': 0.45, 'sell_threshold': 0.75, 'name': '45-75布林线', "mode": 2},
+        {'buy_threshold': 0.45, 'sell_threshold': 0.85, 'name': '45-85布林线', "mode": 2},
+        {'buy_threshold': 0.50, 'sell_threshold': 0.80, 'name': '50-80布林线', "mode": 2},
+        {'buy_threshold': 0.50, 'sell_threshold': 0.90, 'name': '50-90布林线', "mode": 2},
+        {'buy_threshold': 0.55, 'sell_threshold': 0.85, 'name': '55-85布林线', "mode": 2},
+        {'buy_threshold': 0.55, 'sell_threshold': 0.95, 'name': '55-95布林线', "mode": 2},
     ]
 
     # 为每个策略初始化状态
@@ -75,8 +97,9 @@ def backtest_index(index_info):
         strategy['total_holding_days'] = 0  # 总持仓天数
         strategy['total_return'] = 0  # 累计收益
 
-    # 添加前一天的估值百分位用于判断上穿
+    # 添加前一天的估值百分位和布林线位置用于判断上穿
     df_test['prev_估值百分位'] = df_test['估值百分位'].shift(1)
+    df_test['prev_布林线位置'] = df_test['布林线位置'].shift(1)
 
     # 添加下一天的开盘价用于交易执行
     df_test['next_开盘价'] = df_test['开盘价'].shift(-1)
@@ -94,11 +117,23 @@ def backtest_index(index_info):
         next_open_price = row['next_开盘价']  # 下一日开盘价用于交易
         pe_percentile = row['估值百分位']
         prev_pe_percentile = row['prev_估值百分位']  # 前一日估值百分位
+        bollinger_position = row['布林线位置']
+        prev_bollinger_position = row['prev_布林线位置']
 
         # 遍历每个策略
         for strategy in strategies:
-            # 买入条件：没有持仓，且上日益估值百分位低于阈值，且当日估值百分位高于等于阈值
-            if (not strategy['position']) and (prev_pe_percentile < strategy['buy_threshold'] <= pe_percentile):
+            # 根据策略模式选择不同的买卖信号判断方法
+            if strategy['mode'] == 1:
+                # 模式1：使用估值百分位作为买卖信号
+                buy_signal = (not strategy['position']) and (prev_pe_percentile < strategy['buy_threshold'] <= pe_percentile)
+                sell_signal = strategy['position'] and strategy['capital'] > 0 and (prev_pe_percentile < strategy['sell_threshold'] <= pe_percentile)
+            elif strategy['mode'] == 2:
+                # 模式2：使用布林线位置作为买卖信号
+                buy_signal = (not strategy['position']) and (prev_bollinger_position < strategy['buy_threshold'] <= bollinger_position)
+                sell_signal = strategy['position'] and strategy['capital'] > 0 and (prev_bollinger_position < strategy['sell_threshold'] <= bollinger_position)
+            
+            # 买入条件
+            if buy_signal:
                 strategy['position'] = True
                 strategy['position_date'] = date
                 strategy['buy_price'] = next_open_price
@@ -121,10 +156,15 @@ def backtest_index(index_info):
                 current_return = (next_open_price - strategy['buy_price']) / strategy['buy_price'] if strategy['buy_price'] != 0 else 0
 
                 # 止损条件：下跌超过15%
-                stop_loss = current_return <= -0.10
+                stop_loss = current_return <= -0.15
 
-                # 止盈条件：上一日低于阈值，当日高于等于阈值
-                take_profit = (prev_pe_percentile < strategy['sell_threshold'] <= pe_percentile)
+                # 止盈条件：根据策略模式决定
+                if strategy['mode'] == 1:
+                    # 模式1：估值百分位上穿卖出阈值
+                    take_profit = (prev_pe_percentile < strategy['sell_threshold'] <= pe_percentile)
+                elif strategy['mode'] == 2:
+                    # 模式2：布林线位置上穿卖出阈值
+                    take_profit = (prev_bollinger_position < strategy['sell_threshold'] <= bollinger_position)
 
                 # 如果触发止损或止盈
                 if stop_loss or take_profit:
@@ -133,15 +173,6 @@ def backtest_index(index_info):
 
                     # 计算卖出后的资金
                     sell_capital = strategy['shares'] * next_open_price
-
-                    # 计算本次收益
-                    # 修复除零错误：检查 strategy['capital'] 是否为 0
-                    if strategy['capital'] != 0:
-                        trade_return = (sell_capital - strategy['capital']) / strategy['capital']
-                    else:
-                        trade_return = 0 if sell_capital == 0 else float('inf')
-                        
-                    strategy['total_return'] += trade_return
 
                     # 累计总持仓天数
                     strategy['total_holding_days'] += holding_days
@@ -169,58 +200,64 @@ def backtest_index(index_info):
     # 处理仍持仓的策略（已买入但从未卖出的情况）
     for strategy in strategies:
         if strategy['position']:
-            # 使用最后一日的数据计算收益
+            # 使用最后一日的下一日开盘价强制卖出
             last_row = df_test.iloc[-1]
-            last_price = last_row['收盘价']  # 使用收盘价作为最终价值
-            final_capital = strategy['shares'] * last_price
+            sell_price = last_row['next_开盘价']  # 使用下一日开盘价作为卖出价格
             
-            # 修复除零错误：检查 strategy['capital'] 是否为 0
-            if strategy['capital'] != 0:
-                final_return = (final_capital - strategy['capital']) / strategy['capital']
-            else:
-                final_return = 0 if final_capital == 0 else float('inf')
-
+            # 如果没有下一日开盘价，则使用当日收盘价
+            if pd.isna(sell_price):
+                sell_price = last_row['收盘价']
+            
+            # 计算卖出后的资金
+            sell_capital = strategy['shares'] * sell_price
+            
             # 计算持有天数
             holding_days = (last_row['日期'] - strategy['position_date']).days
-            strategy['total_holding_days'] += holding_days
-            strategy['total_return'] += final_return
 
-            # 添加持仓结束日志
-            position_end_log = {
+            strategy['total_holding_days'] += holding_days
+            
+            # 添加强制卖出日志
+            force_sell_log = {
                 'date': last_row['日期'].strftime('%Y-%m-%d'),
                 'strategy_name': strategy['name'],
-                'direction': 'position_end',
-                'amount': final_capital,
-                'price': last_price,
-                'cash': final_capital
+                'direction': 'force_sell',
+                'amount': sell_capital,
+                'price': sell_price,
+                'cash': sell_capital
             }
-            log.append(position_end_log)
-            # logging.info(f"持仓结束 - 日期:{position_end_log['日期']}, 策略:{position_end_log['策略名称']}, 价格:{position_end_log['价格']:.4f}")
+            log.append(force_sell_log)
+            
+            # 重置状态
+            strategy['position'] = False
+            strategy['position_date'] = None
+            strategy['buy_price'] = 0
+            strategy['shares'] = 0
+            strategy['capital'] = sell_capital
 
     # 计算每个策略的最终年化收益率
     for strategy in strategies:
-        strategy_stat = {
-            'strategy_name': strategy['name'],
-            'holding_days': strategy['total_holding_days'],
-        }
-
+        # 计算总收益：最终资本减去本金（100000）
+        total_return = strategy['capital'] - 100000
+        
+        # 计算年化收益率
+        annual_return = 0
         if strategy['total_holding_days'] > 0:
-            total_return = strategy['total_return']
-            strategy_stat['cumulative_return_percent'] = total_return * 100
-            
-            # 年化收益计算，避免出现复数
-            base = 1 + strategy['total_return']
+            # 总收益率 = 总收益 / 本金
+            total_rate = total_return / 100000
+            # 年化收益率 = (1 + 总收益率) ^ (365 / 持仓天数) - 1
+            base = 1 + total_rate
             if base > 0:  # 只有当base为正数时才计算幂
                 annual_return = np.power(base, 365 / strategy['total_holding_days']) - 1
             else:
                 annual_return = 0  # 如果base为负数或零，则年化收益设为0
-                
-            strategy_stat['total_return'] = total_return
-            strategy_stat['annual_return'] = annual_return
-        else:
-            strategy_stat['cumulative_return_percent'] = 0
-            strategy_stat['total_return'] = 0
-            strategy_stat['annual_return'] = 0
+
+        strategy_stat = {
+            'strategy_name': strategy['name'],
+            'holding_days': strategy['total_holding_days'],
+            'capital': strategy['capital'],
+            'total_return': total_return,
+            'annual_return': annual_return
+        }
 
         stat.append(strategy_stat)
 
@@ -247,7 +284,7 @@ def backtest_strategy(data_path: pathlib.Path):
         with open(index_dir.joinpath(f"{index['stockCode']}.pickle"), "rb") as f:
             index_info = pickle.load(f)
 
-        backtest_log,backtest_stat = backtest_index(index_info)
+        backtest_log, backtest_stat = backtest_index(index_info)
         # logging.info(f"完成计算{index['stockCode']}的回测")
 
         index_info["backtest_log"] = backtest_log
