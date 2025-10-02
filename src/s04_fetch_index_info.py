@@ -118,53 +118,51 @@ def fetch_index_fundamental(index: dict):
 
 def fetch_single_index_data(index, company_info):
     """抓取单个指数的所有数据"""
-    try:
-        # 抓取权重信息
-        # logging.info(f"正在抓取{index['stockCode']}的权重信息")
-        constituent_weightings = fetch_index_constituent_weightings(index, company_info)
-        if len(constituent_weightings) > 30:
-            constituent_weightings = constituent_weightings[:30]
-        index["constituent_weightings"] = constituent_weightings
 
-        # 抓取跟踪基金
-        # logging.info(f"正在抓取{index['stockCode']}的跟踪基金")
-        index["tracking_fund"] = fetch_index_tracking_fund(index)
+    # 抓取权重信息
+    # logging.info(f"正在抓取{index['stockCode']}的权重信息")
+    constituent_weightings = fetch_index_constituent_weightings(index, company_info)
+    if len(constituent_weightings) > 30:
+        constituent_weightings = constituent_weightings[:30]
+    index["constituent_weightings"] = constituent_weightings
 
-        # 抓取K线数据
-        # logging.info(f"正在抓取{index['stockCode']}的K线数据")
-        candlestick = fetch_index_candlestick(index)
+    # 抓取跟踪基金
+    # logging.info(f"正在抓取{index['stockCode']}的跟踪基金")
+    index["tracking_fund"] = fetch_index_tracking_fund(index)
 
-        # 抓取基本面数据
-        # logging.info(f"正在抓取{index['stockCode']}的基本面数据")
-        fundamental = fetch_index_fundamental(index)
+    # 抓取K线数据
+    # logging.info(f"正在抓取{index['stockCode']}的K线数据")
+    candlestick = fetch_index_candlestick(index)
 
-        # 将K线和基本面数据合并到history中
-        df = pd.merge(candlestick, fundamental, on='date', how='left')
-        df = df.sort_values(by='date')
-        df.reset_index(drop=True, inplace=True)
+    # 抓取基本面数据
+    # logging.info(f"正在抓取{index['stockCode']}的基本面数据")
+    fundamental = fetch_index_fundamental(index)
 
-        df.rename(columns={
-            'date': '日期',
-            'volume': '成交量',
-            'open': '开盘价',
-            'high': '最高价',
-            'low': '最低价',
-            'close': '收盘价',
-            'change': '涨跌幅',
-            'amount': '成交额',
-            'pe_ttm.mcw': '市盈率',
-            'pb.mcw': '市净率',
-            'dyr.mcw': '股息率',
-            'stockCode': '股票代码'
-        }, inplace=True)
+    # 将K线和基本面数据合并到history中
+    df = pd.merge(candlestick, fundamental, on='date', how='left')
+    df = df.sort_values(by='date')
+    df.reset_index(drop=True, inplace=True)
 
-        index["dataframe"] = df
-        index["update"] = datetime.now(SHANGHAI_TZ).strftime("%Y-%m-%d %H:%M:%S")
-        
-        return index
-    except Exception as e:
-        logging.error(f"抓取{index['stockCode']}数据时出错: {e}")
-        return None
+    df.rename(columns={
+        'date': '日期',
+        'volume': '成交量',
+        'open': '开盘价',
+        'high': '最高价',
+        'low': '最低价',
+        'close': '收盘价',
+        'change': '涨跌幅',
+        'amount': '成交额',
+        'pe_ttm.mcw': '市盈率',
+        'pb.mcw': '市净率',
+        'dyr.mcw': '股息率',
+        'stockCode': '股票代码'
+    }, inplace=True)
+
+    index["dataframe"] = df
+    index["update"] = datetime.now(SHANGHAI_TZ).strftime("%Y-%m-%d %H:%M:%S")
+
+    return index
+
 
 
 def fetch_index_info(data_path: pathlib.Path):
