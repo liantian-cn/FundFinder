@@ -40,7 +40,7 @@ def calculate_index(data_path: pathlib.Path, config: dict):
 
         with open(index_dir.joinpath(f"{index['stockCode']}.pickle"), "rb") as f:
             index_info = pickle.load(f)
-        logging.info(f"正在计算{index['stockCode']}的指数信息")
+        # logging.info(f"正在计算{index['stockCode']}的指数信息")
 
         df = index_info["dataframe"]
 
@@ -74,7 +74,7 @@ def calculate_index(data_path: pathlib.Path, config: dict):
         with open(index_dir.joinpath(f"{index['stockCode']}.pickle"), "wb") as f:
             pickle.dump(index_info, f)
 
-        logging.info(f"完成计算{index['stockCode']}的指数信息")
+        # logging.info(f"完成计算{index['stockCode']}的指数信息")
         # print(df[-30:])
         # return
 

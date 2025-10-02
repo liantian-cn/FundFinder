@@ -61,7 +61,7 @@ def fetch_index_candlestick(index: dict):
     date_ranges = get_dates_ranges(launch_datetime, end_datetime)
 
     for start, end in date_ranges:
-        logging.info(f"正在抓取{index['stockCode']}的K线数据，{start} - {end}")
+        # logging.info(f"正在抓取{index['stockCode']}的K线数据，{start} - {end}")
         fetch = query_json(url_suffix="cn/index/candlestick",
                            query_params={
                                "stockCode": index["stockCode"],
@@ -91,7 +91,7 @@ def fetch_index_fundamental(index: dict):
     date_ranges = get_dates_ranges(launch_datetime, end_datetime)
 
     for start, end in date_ranges:
-        logging.info(f"正在抓取{index['stockCode']}的基本面数据，{start} - {end}")
+        # logging.info(f"正在抓取{index['stockCode']}的基本面数据，{start} - {end}")
         fetch = query_json(url_suffix="cn/index/fundamental",
                            query_params={
                                "stockCodes": [index["stockCode"], ],
@@ -120,22 +120,22 @@ def fetch_single_index_data(index, company_info):
     """抓取单个指数的所有数据"""
     try:
         # 抓取权重信息
-        logging.info(f"正在抓取{index['stockCode']}的权重信息")
+        # logging.info(f"正在抓取{index['stockCode']}的权重信息")
         constituent_weightings = fetch_index_constituent_weightings(index, company_info)
         if len(constituent_weightings) > 30:
             constituent_weightings = constituent_weightings[:30]
         index["constituent_weightings"] = constituent_weightings
 
         # 抓取跟踪基金
-        logging.info(f"正在抓取{index['stockCode']}的跟踪基金")
+        # logging.info(f"正在抓取{index['stockCode']}的跟踪基金")
         index["tracking_fund"] = fetch_index_tracking_fund(index)
 
         # 抓取K线数据
-        logging.info(f"正在抓取{index['stockCode']}的K线数据")
+        # logging.info(f"正在抓取{index['stockCode']}的K线数据")
         candlestick = fetch_index_candlestick(index)
 
         # 抓取基本面数据
-        logging.info(f"正在抓取{index['stockCode']}的基本面数据")
+        # logging.info(f"正在抓取{index['stockCode']}的基本面数据")
         fundamental = fetch_index_fundamental(index)
 
         # 将K线和基本面数据合并到history中
