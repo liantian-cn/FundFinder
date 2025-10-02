@@ -395,17 +395,6 @@
         "currency": "CNY"
     },
     {
-        "stockCode": "1000005",
-        "fsTableType": "non_financial",
-        "source": "lxri",
-        "areaCode": "cn",
-        "market": "a",
-        "name": "上海非金融A股",
-        "launchDate": "1994-01-01T00:00:00+08:00",
-        "series": "size",
-        "currency": "CNY"
-    },
-    {
         "stockCode": "1000007",
         "fsTableType": "hybrid",
         "source": "lxri",
@@ -437,28 +426,6 @@
         "launchDate": "1994-01-10T00:00:00+08:00",
         "series": "size",
         "currency": "HKD"
-    },
-    {
-        "stockCode": "1000010",
-        "fsTableType": "hybrid",
-        "source": "lxri",
-        "areaCode": "cn",
-        "market": "a",
-        "name": "上海B股",
-        "launchDate": "1994-01-10T00:00:00+08:00",
-        "series": "size",
-        "currency": "USD"
-    },
-    {
-        "stockCode": "1000011",
-        "fsTableType": "non_financial",
-        "source": "lxri",
-        "areaCode": "cn",
-        "market": "a",
-        "name": "A股非金融",
-        "launchDate": "1994-01-10T00:00:00+08:00",
-        "series": "size",
-        "currency": "CNY"
     },
     {
         "stockCode": "1000012",
