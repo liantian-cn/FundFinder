@@ -32,8 +32,8 @@ jobs:
       run: pip install -r requirements.txt
 
     - name: Run Main
-      run: python3 main.py
-      working-directory: src
+      run: python3 daily.py
+      working-directory: .
       env:
         LIXINGER_TOKEN: ${{ secrets.LIXINGER_TOKEN }}
 

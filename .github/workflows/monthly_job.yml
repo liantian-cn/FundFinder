@@ -1,0 +1,40 @@
+name: Monthly Job
+
+on:
+  schedule:
+    - cron:  '0 3 3 * *'
+  workflow_dispatch:
+
+
+jobs:
+  build:
+    name: build page
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pages: write     
+      id-token: write
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@master
+
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11' 
+        cache: 'pip'
+        
+    - name: Install Dependencies
+      run: pip install -r requirements.txt
+
+    - name: Run Main
+      run: python3 monthly.py
+      working-directory: .
+      env:
+        LIXINGER_TOKEN: ${{ secrets.LIXINGER_TOKEN }}
+
+    - name: Auto Commit
+      uses: stefanzweifel/git-auto-commit-action@v5
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
