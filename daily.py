@@ -4,14 +4,12 @@
 import json
 import pickle
 import pathlib
-import time
 import logging
 import pytz
 from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import pandas as pd
 import numpy as np
-
 from utils import retry, find_dict_by_field,get_dates_ranges
 from utils import query_json
 
@@ -26,8 +24,7 @@ if not DATA_DIR.exists():
 
 
 
-from typing import NoReturn
-import pandas as pd
+
 
 
 # 设置最大行数显示（None 表示无限制）
@@ -47,6 +44,13 @@ pd.set_option('display.precision', 6)  # 可选：浮点数精度
 # 禁用 Unicode 字符宽度折叠（pandas 有时误判中文字符宽度）
 pd.set_option('display.unicode.ambiguous_as_wide', True)
 pd.set_option('display.unicode.east_asian_width', True)
+
+
+def mean_with_default(arr, default_value=0):
+    if len(arr) == 0:
+        return default_value
+    mean_value = np.mean(arr)
+    return mean_value if not np.isnan(mean_value) else default_value
 
 
 def filter_consecutive_missing_data(df):
@@ -270,47 +274,47 @@ def backtest_single_index(index_info):
 
     # 初始化5个份额的策略参数
     strategies = [
-        {'buy_threshold': 0.10, 'sell_threshold': 0.40, 'name': '10-40估值线', "mode": 1},
-        {'buy_threshold': 0.10, 'sell_threshold': 0.50, 'name': '10-50估值线', "mode": 1},
-        {'buy_threshold': 0.15, 'sell_threshold': 0.45, 'name': '15-45估值线', "mode": 1},
-        {'buy_threshold': 0.15, 'sell_threshold': 0.55, 'name': '15-55估值线', "mode": 1},
-        {'buy_threshold': 0.20, 'sell_threshold': 0.50, 'name': '20-50估值线', "mode": 1},
-        {'buy_threshold': 0.20, 'sell_threshold': 0.60, 'name': '20-60估值线', "mode": 1},
-        {'buy_threshold': 0.25, 'sell_threshold': 0.55, 'name': '25-55估值线', "mode": 1},
-        {'buy_threshold': 0.25, 'sell_threshold': 0.65, 'name': '25-65估值线', "mode": 1},
-        {'buy_threshold': 0.30, 'sell_threshold': 0.60, 'name': '30-60估值线', "mode": 1},
-        {'buy_threshold': 0.30, 'sell_threshold': 0.70, 'name': '30-70估值线', "mode": 1},
-        {'buy_threshold': 0.35, 'sell_threshold': 0.65, 'name': '35-65估值线', "mode": 1},
-        {'buy_threshold': 0.35, 'sell_threshold': 0.75, 'name': '35-75估值线', "mode": 1},
-        {'buy_threshold': 0.40, 'sell_threshold': 0.70, 'name': '40-70估值线', "mode": 1},
-        {'buy_threshold': 0.40, 'sell_threshold': 0.80, 'name': '40-80估值线', "mode": 1},
-        {'buy_threshold': 0.45, 'sell_threshold': 0.75, 'name': '45-75估值线', "mode": 1},
-        {'buy_threshold': 0.45, 'sell_threshold': 0.85, 'name': '45-85估值线', "mode": 1},
-        {'buy_threshold': 0.50, 'sell_threshold': 0.80, 'name': '50-80估值线', "mode": 1},
-        {'buy_threshold': 0.50, 'sell_threshold': 0.90, 'name': '50-90估值线', "mode": 1},
-        {'buy_threshold': 0.55, 'sell_threshold': 0.85, 'name': '55-85估值线', "mode": 1},
-        {'buy_threshold': 0.55, 'sell_threshold': 0.95, 'name': '55-95估值线', "mode": 1},
+        {'buy_threshold': 0.10, 'sell_threshold': 0.40, 'name': '10-40估值线', "mode": "fundamental"},
+        {'buy_threshold': 0.10, 'sell_threshold': 0.50, 'name': '10-50估值线', "mode": "fundamental"},
+        {'buy_threshold': 0.15, 'sell_threshold': 0.45, 'name': '15-45估值线', "mode": "fundamental"},
+        {'buy_threshold': 0.15, 'sell_threshold': 0.55, 'name': '15-55估值线', "mode": "fundamental"},
+        {'buy_threshold': 0.20, 'sell_threshold': 0.50, 'name': '20-50估值线', "mode": "fundamental"},
+        {'buy_threshold': 0.20, 'sell_threshold': 0.60, 'name': '20-60估值线', "mode": "fundamental"},
+        {'buy_threshold': 0.25, 'sell_threshold': 0.55, 'name': '25-55估值线', "mode": "fundamental"},
+        {'buy_threshold': 0.25, 'sell_threshold': 0.65, 'name': '25-65估值线', "mode": "fundamental"},
+        {'buy_threshold': 0.30, 'sell_threshold': 0.60, 'name': '30-60估值线', "mode": "fundamental"},
+        {'buy_threshold': 0.30, 'sell_threshold': 0.70, 'name': '30-70估值线', "mode": "fundamental"},
+        {'buy_threshold': 0.35, 'sell_threshold': 0.65, 'name': '35-65估值线', "mode": "fundamental"},
+        {'buy_threshold': 0.35, 'sell_threshold': 0.75, 'name': '35-75估值线', "mode": "fundamental"},
+        {'buy_threshold': 0.40, 'sell_threshold': 0.70, 'name': '40-70估值线', "mode": "fundamental"},
+        {'buy_threshold': 0.40, 'sell_threshold': 0.80, 'name': '40-80估值线', "mode": "fundamental"},
+        {'buy_threshold': 0.45, 'sell_threshold': 0.75, 'name': '45-75估值线', "mode": "fundamental"},
+        {'buy_threshold': 0.45, 'sell_threshold': 0.85, 'name': '45-85估值线', "mode": "fundamental"},
+        # {'buy_threshold': 0.50, 'sell_threshold': 0.80, 'name': '50-80估值线', "mode": "fundamental"},
+        # {'buy_threshold': 0.50, 'sell_threshold': 0.90, 'name': '50-90估值线', "mode": "fundamental"},
+        # {'buy_threshold': 0.55, 'sell_threshold': 0.85, 'name': '55-85估值线', "mode": "fundamental"},
+        # {'buy_threshold': 0.55, 'sell_threshold': 0.95, 'name': '55-95估值线', "mode": "fundamental"},
 
-        {'buy_threshold': 0.10, 'sell_threshold': 0.40, 'name': '10-40布林线', "mode": 2},
-        {'buy_threshold': 0.10, 'sell_threshold': 0.50, 'name': '10-50布林线', "mode": 2},
-        {'buy_threshold': 0.15, 'sell_threshold': 0.45, 'name': '15-45布林线', "mode": 2},
-        {'buy_threshold': 0.15, 'sell_threshold': 0.55, 'name': '15-55布林线', "mode": 2},
-        {'buy_threshold': 0.20, 'sell_threshold': 0.50, 'name': '20-50布林线', "mode": 2},
-        {'buy_threshold': 0.20, 'sell_threshold': 0.60, 'name': '20-60布林线', "mode": 2},
-        {'buy_threshold': 0.25, 'sell_threshold': 0.55, 'name': '25-55布林线', "mode": 2},
-        {'buy_threshold': 0.25, 'sell_threshold': 0.65, 'name': '25-65布林线', "mode": 2},
-        {'buy_threshold': 0.30, 'sell_threshold': 0.60, 'name': '30-60布林线', "mode": 2},
-        {'buy_threshold': 0.30, 'sell_threshold': 0.70, 'name': '30-70布林线', "mode": 2},
-        {'buy_threshold': 0.35, 'sell_threshold': 0.65, 'name': '35-65布林线', "mode": 2},
-        {'buy_threshold': 0.35, 'sell_threshold': 0.75, 'name': '35-75布林线', "mode": 2},
-        {'buy_threshold': 0.40, 'sell_threshold': 0.70, 'name': '40-70布林线', "mode": 2},
-        {'buy_threshold': 0.40, 'sell_threshold': 0.80, 'name': '40-80布林线', "mode": 2},
-        {'buy_threshold': 0.45, 'sell_threshold': 0.75, 'name': '45-75布林线', "mode": 2},
-        {'buy_threshold': 0.45, 'sell_threshold': 0.85, 'name': '45-85布林线', "mode": 2},
-        {'buy_threshold': 0.50, 'sell_threshold': 0.80, 'name': '50-80布林线', "mode": 2},
-        {'buy_threshold': 0.50, 'sell_threshold': 0.90, 'name': '50-90布林线', "mode": 2},
-        {'buy_threshold': 0.55, 'sell_threshold': 0.85, 'name': '55-85布林线', "mode": 2},
-        {'buy_threshold': 0.55, 'sell_threshold': 0.95, 'name': '55-95布林线', "mode": 2},
+        {'buy_threshold': 0.10, 'sell_threshold': 0.40, 'name': '10-40布林线', "mode": "bollinger"},
+        {'buy_threshold': 0.10, 'sell_threshold': 0.50, 'name': '10-50布林线', "mode": "bollinger"},
+        {'buy_threshold': 0.15, 'sell_threshold': 0.45, 'name': '15-45布林线', "mode": "bollinger"},
+        {'buy_threshold': 0.15, 'sell_threshold': 0.55, 'name': '15-55布林线', "mode": "bollinger"},
+        {'buy_threshold': 0.20, 'sell_threshold': 0.50, 'name': '20-50布林线', "mode": "bollinger"},
+        {'buy_threshold': 0.20, 'sell_threshold': 0.60, 'name': '20-60布林线', "mode": "bollinger"},
+        {'buy_threshold': 0.25, 'sell_threshold': 0.55, 'name': '25-55布林线', "mode": "bollinger"},
+        {'buy_threshold': 0.25, 'sell_threshold': 0.65, 'name': '25-65布林线', "mode": "bollinger"},
+        {'buy_threshold': 0.30, 'sell_threshold': 0.60, 'name': '30-60布林线', "mode": "bollinger"},
+        {'buy_threshold': 0.30, 'sell_threshold': 0.70, 'name': '30-70布林线', "mode": "bollinger"},
+        {'buy_threshold': 0.35, 'sell_threshold': 0.65, 'name': '35-65布林线', "mode": "bollinger"},
+        {'buy_threshold': 0.35, 'sell_threshold': 0.75, 'name': '35-75布林线', "mode": "bollinger"},
+        {'buy_threshold': 0.40, 'sell_threshold': 0.70, 'name': '40-70布林线', "mode": "bollinger"},
+        {'buy_threshold': 0.40, 'sell_threshold': 0.80, 'name': '40-80布林线', "mode": "bollinger"},
+        {'buy_threshold': 0.45, 'sell_threshold': 0.75, 'name': '45-75布林线', "mode": "bollinger"},
+        {'buy_threshold': 0.45, 'sell_threshold': 0.85, 'name': '45-85布林线', "mode": "bollinger"},
+        # {'buy_threshold': 0.50, 'sell_threshold': 0.80, 'name': '50-80布林线', "mode": "bollinger"},
+        # {'buy_threshold': 0.50, 'sell_threshold': 0.90, 'name': '50-90布林线', "mode": "bollinger"},
+        # {'buy_threshold': 0.55, 'sell_threshold': 0.85, 'name': '55-85布林线', "mode": "bollinger"},
+        # {'buy_threshold': 0.55, 'sell_threshold': 0.95, 'name': '55-95布林线', "mode": "bollinger"},
     ]
 
     # 为每个策略初始化状态
@@ -322,6 +326,9 @@ def backtest_single_index(index_info):
         strategy['shares'] = 0  # 持有份额
         strategy['total_holding_days'] = 0  # 总持仓天数
         strategy['total_return'] = 0  # 累计收益
+        strategy['date_start'] = None
+        strategy['date_end'] = None
+
 
     # 添加前一天的估值百分位和布林线位置用于判断上穿
     df_test['prev_估值百分位'] = df_test['估值百分位'].shift(1)
@@ -333,12 +340,10 @@ def backtest_single_index(index_info):
     # 初始化日志列表
     log = []
     stat = []
-
     # 开始回测
     for i, row in df_test.iterrows():
         if pd.isna(row['prev_估值百分位']) or pd.isna(row['next_开盘价']):
             continue
-
         date = row['日期']
         next_open_price = row['next_开盘价']  # 下一日开盘价用于交易
         pe_percentile = row['估值百分位']
@@ -348,12 +353,16 @@ def backtest_single_index(index_info):
 
         # 遍历每个策略
         for strategy in strategies:
+            if strategy['date_start'] is None:
+                strategy['date_start'] = date
+            strategy['date_end'] = date
+
             # 根据策略模式选择不同的买卖信号判断方法
-            if strategy['mode'] == 1:
+            if strategy['mode'] == "fundamental":
                 # 模式1：使用估值百分位作为买卖信号
                 buy_signal = (not strategy['position']) and (prev_pe_percentile < strategy['buy_threshold'] <= pe_percentile)
                 sell_signal = strategy['position'] and strategy['capital'] > 0 and (prev_pe_percentile < strategy['sell_threshold'] <= pe_percentile)
-            elif strategy['mode'] == 2:
+            elif strategy['mode'] == "bollinger":
                 # 模式2：使用布林线位置作为买卖信号
                 buy_signal = (not strategy['position']) and (prev_bollinger_position < strategy['buy_threshold'] <= bollinger_position)
                 sell_signal = strategy['position'] and strategy['capital'] > 0 and (prev_bollinger_position < strategy['sell_threshold'] <= bollinger_position)
@@ -385,10 +394,10 @@ def backtest_single_index(index_info):
                 stop_loss = current_return <= -0.15
 
                 # 止盈条件：根据策略模式决定
-                if strategy['mode'] == 1:
+                if strategy['mode'] == "fundamental":
                     # 模式1：估值百分位上穿卖出阈值
                     take_profit = (prev_pe_percentile < strategy['sell_threshold'] <= pe_percentile)
-                elif strategy['mode'] == 2:
+                elif strategy['mode'] == "bollinger":
                     # 模式2：布林线位置上穿卖出阈值
                     take_profit = (prev_bollinger_position < strategy['sell_threshold'] <= bollinger_position)
 
@@ -465,11 +474,26 @@ def backtest_single_index(index_info):
         # 计算总收益：最终资本减去本金（100000）
         total_return = strategy['capital'] - 100000
 
-        # 计算年化收益率
+        # 总收益率 = 总收益 / 本金
+        total_rate = total_return / 100000
+
+
+
+        if (strategy['date_start'] is not None) and (strategy['date_end'] is not None) :
+            strategy_duration = (strategy['date_end'] - strategy['date_start']).days
+        else:
+            strategy_duration = 0
+        # 综策略持续时间计算收益率。
+        if strategy_duration > 0:
+            strategy_duration_rate = total_rate/(strategy_duration/365)
+        else:
+            strategy_duration_rate = 0
+
+
+        # 按持仓时间计算收益率
         annual_return = 0
         if strategy['total_holding_days'] > 0:
-            # 总收益率 = 总收益 / 本金
-            total_rate = total_return / 100000
+
             # 年化收益率 = (1 + 总收益率) ^ (365 / 持仓天数) - 1
             base = 1 + total_rate
             if base > 0:  # 只有当base为正数时才计算幂
@@ -477,18 +501,28 @@ def backtest_single_index(index_info):
             else:
                 annual_return = 0  # 如果base为负数或零，则年化收益设为0
 
+        # 策略持仓率
+        position_rate = strategy['total_holding_days'] / strategy_duration
+
         strategy_stat = {
+            'mode':strategy['mode'],
             'strategy_name': strategy['name'],
+            'buy_threshold': strategy['buy_threshold'],
+            'sell_threshold': strategy['sell_threshold'],
             'holding_days': strategy['total_holding_days'],
             'capital': strategy['capital'],
             'total_return': total_return,
-            'annual_return': annual_return
+            'total_rate':total_rate,
+            'annual_return': annual_return,
+            'strategy_duration': strategy_duration,
+            'strategy_duration_rate':strategy_duration_rate,
+            'position_rate':position_rate
         }
 
         stat.append(strategy_stat)
 
     # 按年化收益从高到低排序
-    stat.sort(key=lambda x: x['annual_return'], reverse=True)
+    stat.sort(key=lambda x: x['strategy_duration_rate'], reverse=True)
 
     return log, stat
 
@@ -601,16 +635,39 @@ def export_home():
 
         backtest_stat = index_info["backtest_stat"]
 
-        total_holding_days = sum(stat["holding_days"] for stat in backtest_stat)
+        # 分类策略状态
+        fundamental_stat  = [stat for stat in backtest_stat if stat["mode"] == "fundamental"]
+        bollinger_stat = [stat for stat in backtest_stat if stat["mode"] == "bollinger"]
 
-        backtest_avg = 0
-        for stat in backtest_stat:
-            # 统计权重，来自持仓时间
-            stat_weight = stat["holding_days"] / total_holding_days
-            backtest_avg += stat_weight * stat["annual_return"]
 
-        entry["backtest_avg"] = backtest_avg
-        # print(entry)
+        # 求2种估值的年化收益中位数，去掉持仓小于15%的。
+        fundamental_rate = [stat["strategy_duration_rate"] for stat in fundamental_stat if stat["position_rate"] > 0.15]
+        bollinger_rate = [stat["strategy_duration_rate"] for stat in bollinger_stat if stat["position_rate"] > 0.15]
+        fundamental_rate_median = mean_with_default(fundamental_rate)
+        bollinger_rate_median = mean_with_default(bollinger_rate)
+
+        # 过滤出收益大于中位数的策略
+        high_fundamental_stat = [stat for stat in fundamental_stat if stat["strategy_duration_rate"] > fundamental_rate_median]
+        high_bollinger_stat = [stat for stat in bollinger_stat if stat["strategy_duration_rate"] > bollinger_rate_median]
+
+        # 求这些策略的平均买入、卖出价格
+        high_fundamental_buy_price = mean_with_default([stat["buy_threshold"] for stat in high_fundamental_stat])
+        high_fundamental_sell_price = mean_with_default([stat["sell_threshold"] for stat in high_fundamental_stat])
+        high_bollinger_buy_price = mean_with_default([stat["buy_threshold"] for stat in high_bollinger_stat])
+        high_bollinger_sell_price = mean_with_default([stat["sell_threshold"] for stat in high_bollinger_stat])
+
+        # 平均收益率
+        high_fundamental_rate_mean = mean_with_default([stat["strategy_duration_rate"] for stat in high_fundamental_stat])
+        high_bollinger_rate_mean = mean_with_default([stat["strategy_duration_rate"] for stat in high_bollinger_stat])
+
+
+        entry["fundamental_rate"] = high_fundamental_rate_mean
+        entry["bollinger_rate"] = high_bollinger_rate_mean
+        entry["fundamental_buy_price"] = high_fundamental_buy_price
+        entry["fundamental_sell_price"] = high_fundamental_sell_price
+        entry["bollinger_buy_price"] = high_bollinger_buy_price
+        entry["bollinger_sell_price"] = high_bollinger_sell_price
+
 
         result.append(entry)
 
@@ -624,8 +681,8 @@ def export_home():
         json.dump(result, f, ensure_ascii=False, indent=4)
 
 def main():
-    fetch_data()
-    calculate_index()
+    # fetch_data()
+    # calculate_index()
     backtest_index()
     export_to_js()
     export_home()

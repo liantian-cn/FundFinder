@@ -237,10 +237,12 @@
                             <thead>
                                 <tr>
                                     <th>策略名称</th>
-                                    <th>总持仓天数</th>
+                                    <th>总收益</th>
                                     <th>总收益率</th>
-                                    <th>年化收益率</th>
-                                    <th>剩余资金</th>
+                                    <th>策略天数</th>
+                                    <th>策略收益率</th>
+                                    <th>持仓天数</th>
+                                    <th>持仓收益率</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -825,9 +827,12 @@
         function processBacktestStat(data) {
             return data.map(item => ({
                 strategy_name: item.strategy_name,
-                holding_days: item.holding_days,
-                total_return: item.total_return,
-                annual_return: item.annual_return,
+                total_return: item.total_return,          // 总收益
+                total_rate: item.total_rate,          // 总收益率
+                strategy_duration: item.strategy_duration,  // 策略天数
+                strategy_duration_rate: item.strategy_duration_rate,  //策略收益率
+                holding_days: item.holding_days,        // 持仓天数
+                annual_return: item.annual_return,      // 持仓收益率
                 capital: item.capital,
             }));
         }
@@ -928,17 +933,52 @@
         function initBacktestStatTable(data) {
             renderTable('#backtestStatTable', processBacktestStat(data), [
                 { data: 'strategy_name' },
-                { data: 'holding_days' },
-                {
+                { 
                     data: 'total_return',
                     render: function (data, type, row) {
                         if (type === 'display' || type === 'filter') {
-                            return (data ).toFixed(2);
+                            return Math.round(data);
                         }
                         return data;
                     }
-                },
-                {
+                },        // 总收益
+                { 
+                    data: 'total_rate',
+                    render: function (data, type, row) {
+                        if (type === 'display' || type === 'filter') {
+                            return (data * 100).toFixed(2) + '%';
+                        }
+                        return data;
+                    }
+                },              // 总收益率
+                { 
+                    data: 'strategy_duration',
+                    render: function (data, type, row) {
+                        if (type === 'display' || type === 'filter') {
+                            return Math.round(data);
+                        }
+                        return data;
+                    }
+                },  // 策略天数
+                { 
+                    data: 'strategy_duration_rate',
+                    render: function (data, type, row) {
+                        if (type === 'display' || type === 'filter') {
+                            return (data * 100).toFixed(2) + '%';
+                        }
+                        return data;
+                    }
+                },  // 策略收益率
+                { 
+                    data: 'holding_days',
+                    render: function (data, type, row) {
+                        if (type === 'display' || type === 'filter') {
+                            return Math.round(data);
+                        }
+                        return data;
+                    }
+                },  // 持仓天数
+                { 
                     data: 'annual_return',
                     render: function (data, type, row) {
                         if (type === 'display' || type === 'filter') {
@@ -946,16 +986,7 @@
                         }
                         return data;
                     }
-                },
-               {
-                    data: 'capital',
-                    render: function (data, type, row) {
-                        if (type === 'display' || type === 'filter') {
-                            return (data * 100).toFixed(2);
-                        }
-                        return data;
-                    }
-                }
+                }   // 持仓收益率
             ], [[3, 'desc']]);
         }
 

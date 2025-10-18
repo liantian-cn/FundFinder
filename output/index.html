@@ -31,7 +31,10 @@
                     <th>市净率</th>
                     <th>基金总数</th>
                     <th>估值百分位</th>
-                    <th>最佳网格年化收益率</th>
+                    <th>估值网格收益</th>
+                    <th>布林网格收益</th>
+                    <th>估值买卖点</th>
+                    <th>布林买卖点</th>
                     <th>详情</th>
                 </tr>
             </thead>
@@ -52,6 +55,8 @@
                     let peValue = null;
                     let pbValue = null;
                     let valuationValue = null;
+                    let fundamentalRateValue = null;  // 估值网格收益
+                    let bollingerRateValue = null;    // 布林网格收益
 
                     if (item.股息率 !== undefined && item.股息率 !== null) {
                         dyrValue = parseFloat(item.股息率);
@@ -65,13 +70,35 @@
                     if (item.估值百分位 !== undefined && item.估值百分位 !== null) {
                         valuationValue = parseFloat(item.估值百分位);
                     }
+                    if (item.fundamental_rate !== undefined && item.fundamental_rate !== null) {
+                        fundamentalRateValue = parseFloat(item.fundamental_rate);
+                    }
+                    if (item.bollinger_rate !== undefined && item.bollinger_rate !== null) {
+                        bollingerRateValue = parseFloat(item.bollinger_rate);
+                    }
+
+                    // 提取买卖点数据
+                    let fundamentalBuyPrice = item.fundamental_buy_price !== undefined && item.fundamental_buy_price !== null ? 
+                                              Math.round(parseFloat(item.fundamental_buy_price) * 100) : null;
+                    let fundamentalSellPrice = item.fundamental_sell_price !== undefined && item.fundamental_sell_price !== null ? 
+                                               Math.round(parseFloat(item.fundamental_sell_price) * 100) : null;
+                    let bollingerBuyPrice = item.bollinger_buy_price !== undefined && item.bollinger_buy_price !== null ? 
+                                            Math.round(parseFloat(item.bollinger_buy_price) * 100) : null;
+                    let bollingerSellPrice = item.bollinger_sell_price !== undefined && item.bollinger_sell_price !== null ? 
+                                             Math.round(parseFloat(item.bollinger_sell_price) * 100) : null;
 
                     return {
                         ...item,
                         dyrValue: dyrValue,
                         peValue: peValue,
                         pbValue: pbValue,
-                        valuationValue: valuationValue
+                        valuationValue: valuationValue,
+                        fundamentalRateValue: fundamentalRateValue,
+                        bollingerRateValue: bollingerRateValue,
+                        fundamentalBuyPrice: fundamentalBuyPrice,
+                        fundamentalSellPrice: fundamentalSellPrice,
+                        bollingerBuyPrice: bollingerBuyPrice,
+                        bollingerSellPrice: bollingerSellPrice
                     };
                 });
 
@@ -87,6 +114,12 @@
                     .filter(value => value !== null);
                 const validValuationValues = processedData
                     .map(item => item.valuationValue)
+                    .filter(value => value !== null);
+                const validFundamentalRateValues = processedData
+                    .map(item => item.fundamentalRateValue)
+                    .filter(value => value !== null);
+                const validBollingerRateValues = processedData
+                    .map(item => item.bollingerRateValue)
                     .filter(value => value !== null);
 
                 const maxDyr = validDyrValues.length > 0 ? Math.max(...validDyrValues) : 0;
@@ -105,6 +138,14 @@
                 const minValuation = validValuationValues.length > 0 ? Math.min(...validValuationValues) : 0;
                 const valuationRange = maxValuation - minValuation;
 
+                const maxFundamentalRate = validFundamentalRateValues.length > 0 ? Math.max(...validFundamentalRateValues) : 0;
+                const minFundamentalRate = validFundamentalRateValues.length > 0 ? Math.min(...validFundamentalRateValues) : 0;
+                const fundamentalRateRange = maxFundamentalRate - minFundamentalRate;
+
+                const maxBollingerRate = validBollingerRateValues.length > 0 ? Math.max(...validBollingerRateValues) : 0;
+                const minBollingerRate = validBollingerRateValues.length > 0 ? Math.min(...validBollingerRateValues) : 0;
+                const bollingerRateRange = maxBollingerRate - minBollingerRate;
+
                 const tableData = processedData.map(item => [
                     item.日期,
                     item.股票代码,
@@ -114,7 +155,12 @@
                     item.市净率 !== undefined && item.市净率 !== null ? item.市净率.toFixed(2) : 'N/A',
                     item.tracking_fund_count,
                     item.估值百分位 !== undefined && item.估值百分位 !== null ? (item.估值百分位 * 100).toFixed(2) + '%' : 'N/A',
-                    item.backtest_avg !== undefined && item.backtest_avg !== null ? (item.backtest_avg * 100).toFixed(2) + '%' : 'N/A',
+                    item.fundamental_rate !== undefined && item.fundamental_rate !== null ? (item.fundamental_rate * 100).toFixed(2) + '%' : 'N/A',
+                    item.bollinger_rate !== undefined && item.bollinger_rate !== null ? (item.bollinger_rate * 100).toFixed(2) + '%' : 'N/A',
+                    item.fundamentalBuyPrice !== null && item.fundamentalSellPrice !== null ? 
+                      `${item.fundamentalBuyPrice}/${item.fundamentalSellPrice}` : 'N/A',
+                    item.bollingerBuyPrice !== null && item.bollingerSellPrice !== null ? 
+                      `${item.bollingerBuyPrice}/${item.bollingerSellPrice}` : 'N/A',
                     `<a href="/fund.html?stockCode=${item.股票代码}">详情</a>`,
                     item.dyrValue, // 隐藏列，用于染色计算
                     item.peValue,  // 隐藏列，用于染色计算
@@ -133,18 +179,21 @@
                         { title: "市净率" },
                         { title: "基金总数" },
                         { title: "估值百分位" },
-                        { title: "平均网格年化收益率" },
+                        { title: "估值网格收益" },
+                        { title: "布林网格收益" },
+                        { title: "估值买卖点" },
+                        { title: "布林买卖点" },
                         { title: "详情" },
-                        { title: "股息率值", visible: false }, // 隐藏列
+                        { title: "股息率값", visible: false }, // 隐藏列
                         { title: "市盈率C", visible: false }, // 隐藏列
                         { title: "市净率C", visible: false }, // 隐藏列
-                        { title: "估值百分위C", visible: false } // 隐藏列
+                        { title: "估值百分位C", visible: false } // 隐藏列
                     ],
                     order: [[0, 'desc']],
                     paging: false,
                     createdRow: function (row, data, dataIndex) {
                         // 股息率染色（高绿色，低红色）
-                        const dyrValue = data[10]; // 第11列是隐藏的股息率값
+                        const dyrValue = data[13]; // 第14列是隐藏的股息率值
                         const dyrCell = $('td', row).eq(3); // 第4列是股息率显示列
 
                         if (dyrValue !== null && dyrRange > 0) {
@@ -154,30 +203,8 @@
                             dyrCell.css('background-color', color);
                         }
 
-                        // 市盈率染色（高红色，低绿色）
-                        const peValue = data[11]; // 第12列是隐藏的市盈率값
-                        const peCell = $('td', row).eq(4); // 第5列是市盈率显示列
-
-                        if (peValue !== null && peRange > 0) {
-                            const ratio = (peValue - minPe) / peRange;
-                            const hue = 120 - (ratio * 120); // 120 = green, 0 = red
-                            const color = `hsl(${hue}, 80%, 85%)`;
-                            peCell.css('background-color', color);
-                        }
-
-                        // 市净率染色（高红色，低绿色）
-                        const pbValue = data[12]; // 第13列是隐藏的市净率값
-                        const pbCell = $('td', row).eq(5); // 第6列是市净率显示列
-
-                        if (pbValue !== null && pbRange > 0) {
-                            const ratio = (pbValue - minPb) / pbRange;
-                            const hue = 120 - (ratio * 120); // 120 = green, 0 = red
-                            const color = `hsl(${hue}, 80%, 85%)`;
-                            pbCell.css('background-color', color);
-                        }
-
                         // 估值百分位染色（高红色，低绿色）
-                        const valuationValue = data[13]; // 第14列是隐藏的估值百分位값
+                        const valuationValue = data[16]; // 第17列是隐藏的估值百分位값
                         const valuationCell = $('td', row).eq(7); // 第8列是估值百分位显示列
 
                         if (valuationValue !== null && valuationRange > 0) {
