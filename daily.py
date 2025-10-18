@@ -681,8 +681,8 @@ def export_home():
         json.dump(result, f, ensure_ascii=False, indent=4)
 
 def main():
-    # fetch_data()
-    # calculate_index()
+    fetch_data()
+    calculate_index()
     backtest_index()
     export_to_js()
     export_home()
