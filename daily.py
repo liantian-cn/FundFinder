@@ -76,7 +76,7 @@ def filter_consecutive_missing_data(df):
     return df.iloc[first_valid_index:].copy()
 
 
-@retry(max_attempts=5, delay=5)
+@retry(max_attempts=5, delay=2)
 def fetch_index_candlestick(index):
     end_datetime = datetime.now(SHANGHAI_TZ)
     launch_datetime = datetime.fromisoformat(index["launchDate"])
@@ -104,7 +104,7 @@ def fetch_index_candlestick(index):
     return df
 
 
-@retry(max_attempts=5, delay=5)
+@retry(max_attempts=5, delay=2)
 def fetch_index_fundamental(index: dict):
     end_datetime = datetime.now(SHANGHAI_TZ)
     launch_datetime = datetime.fromisoformat(index["launchDate"])
@@ -175,7 +175,7 @@ def fetch_data():
     completed_count = 0
 
     # 使用线程池并发执行，最大并发数20
-    with ThreadPoolExecutor(max_workers=15) as executor:
+    with ThreadPoolExecutor(max_workers=12) as executor:
         # 提交所有任务
         future_to_index = {
             executor.submit(fetch_index, index): index
