@@ -37,10 +37,12 @@ jobs:
       env:
         LIXINGER_TOKEN: ${{ secrets.LIXINGER_TOKEN }}
 
-#    - name: Auto Commit
-#      uses: stefanzweifel/git-auto-commit-action@v5
-#      with:
-#        github_token: ${{ secrets.GITHUB_TOKEN }}
+    - name: Deploy to Cloudflare Pages
+      uses: cloudflare/wrangler-action@v3
+      with:
+        apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        command: pages deploy --project-name=fund-finder ./output
     
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v3
