@@ -1,17 +1,22 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+"""
+每日执行脚本
+
+该脚本负责每日获取指数数据、处理数据、执行回测并导出结果。
+"""
+
 import json
 import pickle
 import pathlib
 import logging
 import pytz
-from datetime import datetime, timedelta
+from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import pandas as pd
 import numpy as np
-from utils import retry, find_dict_by_field,get_dates_ranges
-from utils import query_json
+from utils import retry, get_dates_ranges, query_json
 
 SHANGHAI_TZ = pytz.timezone("Asia/Shanghai")
 BASE_DIR = pathlib.Path(__file__).parent
@@ -21,12 +26,7 @@ if not DATA_DIR.exists():
     DATA_DIR.mkdir()
 
 
-
-
-
-
-
-
+# 设置pandas显示选项
 # 设置最大行数显示（None 表示无限制）
 pd.set_option('display.max_rows', None)
 # 设置最大列数显示（无限制）
@@ -37,7 +37,7 @@ pd.set_option('display.expand_frame_repr', False)
 pd.set_option('display.width', None)
 # 最大宽度，避免列内容被截断
 pd.set_option('display.max_colwidth', None)
-# 关闭“紧凑”模式，确保换行和对齐更清晰
+# 关闭"紧凑"模式，确保换行和对齐更清晰
 pd.set_option('display.precision', 6)  # 可选：浮点数精度
 
 # 解决中文对齐问题的关键设置
@@ -555,8 +555,6 @@ def backtest_index():
 
 
 def export_to_js():
-    cn_index = json.load(BASE_DIR.joinpath("cn_index_filtered.json").open(encoding="utf-8"))
-
     # 定义中文列名到英文列名的映射
     column_mapping = {
         '日期': 'date',
@@ -587,6 +585,8 @@ def export_to_js():
         '股息率收益率': 'dyr_percentile',
         '估值百分位': 'valuation_percentile'
     }
+
+    cn_index = json.load(BASE_DIR.joinpath("cn_index_filtered.json").open(encoding="utf-8"))
 
     # index_dir = data_path.joinpath("index_info")
     # output_path = output_path.joinpath("index")

@@ -1,149 +1,74 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+"""
+月度数据更新脚本
+
+该脚本负责每月更新中国A股指数、公司基础信息以及指数成分股和跟踪基金信息。
+主要功能包括：
+1. 获取所有A股指数基础信息
+2. 获取所有A股公司基础信息
+3. 获取每个指数的成分股及其权重
+4. 获取跟踪每个指数的基金信息
+5. 更新并保存相关数据到JSON文件
+
+依赖:
+- utils.py 中的工具函数
+- config.json 配置文件
+- 环境变量 LIXINGER_TOKEN (用于访问数据API)
+
+使用方法:
+直接运行此脚本即可执行月度数据更新任务。
+"""
 
 import json
 import pathlib
 import time
 import logging
-from datetime import datetime, timedelta
-from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from utils import retry, find_dict_by_field
-from utils import query_json
+# 设置日志格式
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+
+from modules.index_data_fetcher import (
+    fetch_cn_index,
+    fetch_cn_company,
+    update_index_info
+)
+from modules.data_manager import save_data_to_json, load_data_from_json
+from modules.config_manager import load_config
 
 
 BASE_DIR = pathlib.Path(__file__).parent
 
-config = json.load(open(BASE_DIR.joinpath("config.json"), encoding="utf-8"))
-
-
-@retry(max_attempts=5, delay=5)
-def fetch_cn_index():
-    """获取A股所有指数基础信息。"""
-    fetch = query_json("cn/index", {})
-    if fetch['message'] != "success":
-        raise Exception
-    index_data = fetch["data"]
-    return index_data
-
-
-
-
-@retry(max_attempts=5, delay=5)
-def fetch_cn_company():
-    """获取A股所有公司基础信息。"""
-    file_path = pathlib.Path(__file__).parent.joinpath("cn_company.json")
-    fetch = query_json("cn/company", {"includeDelisted":True})
-    if fetch['message'] != "success":
-        raise Exception
-    company_info = fetch["data"]
-    return company_info
-
-@retry(max_attempts=5, delay=5)
-def fetch_index_constituent(stockCode,cn_company):
-    """获取单个指数的信息"""
-    fetch = query_json("cn/index/constituent-weightings", {
-        "startDate": (datetime.now() - timedelta(days=365)).strftime("%Y-%m-%d"),
-        "endDate": datetime.now().strftime("%Y-%m-%d"),
-        "stockCode": stockCode,
-        "limit": 1000
-    })
-    if fetch['message'] != "success":
-        raise Exception
-    constituent_weightings_dict = {}
-    for item in fetch["data"]:
-        # 检查item中是否存在stockCode键，避免KeyError
-        if "stockCode" in item:
-            if item["stockCode"] not in constituent_weightings_dict.keys():
-                constituent_weightings_dict[item["stockCode"]] = item["weighting"]
-        else:
-            logging.warning(f"[{stockCode}]Index constituent item missing 'stockCode': {item}")
-    constituent_weightings_list = []
-    for key, value in constituent_weightings_dict.items():
-        company = find_dict_by_field(cn_company, "stockCode", key)
-        if company is not None:
-            company["weighting"] = value
-            constituent_weightings_list.append(company)
-    constituent_weightings_list.sort(key=lambda x: x["weighting"], reverse=True)
-    return constituent_weightings_list
-
-
-@retry(max_attempts=5, delay=5)
-def fetch_index_tracking_fund(stockCode):
-    fetch = query_json("cn/index/tracking-fund", {
-        "stockCode": stockCode,
-    })
-    if fetch['message'] != "success":
-        raise Exception
-    return fetch["data"]
-
-
-def fetch_single_index_data(index, cn_company):
-    stockCode = index["stockCode"]
-    constituent_weightings = fetch_index_constituent(stockCode, cn_company)
-    if len(constituent_weightings) > 30:
-        constituent_weightings = constituent_weightings[:30]
-    index["constituent_weightings"] = constituent_weightings
-    index["tracking_fund"] = fetch_index_tracking_fund(stockCode)
-    return index
-
-def update_index_info(cn_index_file,cn_company):
-    cn_index = json.load(open(BASE_DIR.joinpath("cn_index.json"), encoding="utf-8"))
-    
-    # 记录开始时间
-    start_time = time.time()
-    total_count = len(cn_index)
-    completed_count = 0
-    
-    # 使用线程池并发执行，最大并发数20
-    with ThreadPoolExecutor(max_workers=20) as executor:
-        # 提交所有任务
-        future_to_index = {
-            executor.submit(fetch_single_index_data, index, cn_company): index 
-            for index in cn_index
-        }
-        
-        # 处理完成的任务
-        results = []
-        for future in as_completed(future_to_index):
-            index = future_to_index[future]
-            try:
-                result = future.result()
-                results.append(result)
-                completed_count += 1
-                
-                # 计算进度信息
-                elapsed_time = time.time() - start_time
-                avg_time_per_item = elapsed_time / completed_count if completed_count > 0 else 0
-                remaining_items = total_count - completed_count
-                estimated_remaining_time = avg_time_per_item * remaining_items
-                
-                # 打印进度信息
-                logging.info(f"进度: {completed_count}/{total_count} ({completed_count/total_count*100:.1f}%) "
-                            f"已完成 {index['stockCode']} - {index['name']}")
-                
-            except Exception as e:
-                completed_count += 1
-                logging.error(f"处理 {index['stockCode']} 时出错: {e}")
-    
-    # 保存结果到文件
-    with open(cn_index_file, "w", encoding="utf-8") as f:
-        json.dump(results, f, indent=4, ensure_ascii=False)
+# 加载配置文件，如果不存在则使用空字典
+config = load_config(BASE_DIR.joinpath("config.json"), {})
 
 
 def main():
-    cn_index = fetch_cn_index()
-    cn_index_file = pathlib.Path(__file__).parent.joinpath("cn_index.json")
-    with open(cn_index_file, "w",encoding="utf-8") as f:
-        json.dump(cn_index, f, indent=4, ensure_ascii=False)
+    """主函数，执行月度数据更新任务。"""
+    logging.info("开始执行月度数据更新任务")
+    
+    try:
+        # 获取所有A股指数基础信息并保存
+        cn_index = fetch_cn_index()
+        cn_index_file = BASE_DIR.joinpath("cn_index.json")
+        save_data_to_json(cn_index, cn_index_file)
 
-    cn_company = fetch_cn_company()
-    cn_company_file = pathlib.Path(__file__).parent.joinpath("cn_company.json")
-    with open(cn_company_file, "w",encoding="utf-8") as f:
-        json.dump(cn_company, f, indent=4, ensure_ascii=False)
+        # 获取所有A股公司基础信息并保存
+        cn_company = fetch_cn_company()
+        cn_company_file = BASE_DIR.joinpath("cn_company.json")
+        save_data_to_json(cn_company, cn_company_file)
 
-    update_index_info(cn_index_file,cn_company)
+        # 更新所有指数的完整信息（成分股和跟踪基金）
+        update_index_info(cn_index_file, cn_company)
+        
+        logging.info("月度数据更新任务执行完成")
+    except Exception as e:
+        logging.error(f"执行月度数据更新任务时出错: {e}")
+        raise
 
-    return
+
 if __name__ == '__main__':
     main()
